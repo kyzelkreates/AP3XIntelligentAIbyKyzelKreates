@@ -90,6 +90,14 @@
       <span class="nav-icon">🛡</span>
       <span class="nav-label">SCAN</span>
     </div>
+    <div class="nav-item" data-view="proj-intel">
+      <span class="nav-icon">◈</span>
+      <span class="nav-label">INTEL</span>
+    </div>
+    <div class="nav-item" data-view="proj-ai">
+      <span class="nav-icon">🤖</span>
+      <span class="nav-label">PROJECT AI</span>
+    </div>
   </nav>
 
   <!-- ── MAIN CONTENT ───────────────────────────────────── -->
@@ -548,6 +556,117 @@ EXAMPLES:
       </div><!-- /.ss-layout -->
     </section>
 
+
+    <!-- ════════════════════════════════════════════════
+         VIEW: PROJECT INTELLIGENCE
+         ════════════════════════════════════════════════ -->
+    <section id="view-proj-intel" class="view">
+      <div class="view-header">
+        <span class="view-title">◈ PROJECT INTELLIGENCE</span>
+        <span class="view-sub">INVESTOR · GRANT · BUILD · ENTITY PACKS FOR YOUR PROJECTS</span>
+      </div>
+
+      <div class="pi-layout">
+
+        <!-- LEFT: Project list + stats -->
+        <div class="pi-left">
+          <div id="pi-status" class="pi-stats-bar"></div>
+          <div class="pi-list-header">YOUR PROJECTS</div>
+          <div id="pi-project-list" class="pi-project-list">
+            <div class="pi-empty">Loading…</div>
+          </div>
+          <button class="btn-secondary" onclick="AP3X_App.navigateTo('ingestion')" style="font-size:9px;margin-top:8px;width:100%">+ ADD PROJECT VIA INGESTION</button>
+        </div>
+
+        <!-- RIGHT: Intelligence pack -->
+        <div class="pi-right">
+          <div id="pi-pack-placeholder" class="pi-pack-placeholder">
+            <div class="pi-pp-icon">◈</div>
+            <div class="pi-pp-title">PROJECT INTELLIGENCE ENGINE</div>
+            <div class="pi-pp-sub">Select a project to generate its full intelligence pack</div>
+            <div class="pi-pp-features">
+              <div class="pi-ppf">◈ Executive summary &amp; one-liner</div>
+              <div class="pi-ppf">◈ Full investor pitch + 60-sec script</div>
+              <div class="pi-ppf">◈ Grant &amp; funding intelligence (UK + intl)</div>
+              <div class="pi-ppf">◈ Build structure &amp; tech stack</div>
+              <div class="pi-ppf">◈ Entity map with relationships</div>
+              <div class="pi-ppf">◈ Market positioning &amp; competitors</div>
+              <div class="pi-ppf">◈ Completeness score &amp; improvement tips</div>
+              <div class="pi-ppf">◈ JSON export for deck building</div>
+            </div>
+          </div>
+          <div id="pi-pack-panel" class="pi-pack-panel hidden"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         VIEW: PROJECT AI
+         ════════════════════════════════════════════════ -->
+    <section id="view-proj-ai" class="view">
+      <div class="view-header">
+        <span class="view-title">🤖 PROJECT AI</span>
+        <span class="view-sub">LEARN · REMEMBER · ANSWER · ANTICIPATE</span>
+      </div>
+
+      <div class="pai-layout">
+
+        <!-- LEFT: Learn + Knowledge base -->
+        <div class="pai-left">
+
+          <!-- LEARN TAB -->
+          <div class="pai-panel">
+            <div class="pai-panel-header">LEARN FROM TEXT</div>
+            <input id="pai-learn-title" type="text" placeholder="Knowledge title (e.g. AP3X Description)" class="pai-text-input" />
+            <select id="pai-learn-project" class="pai-select">
+              <option value="">Link to project (optional)</option>
+            </select>
+            <textarea id="pai-learn-text" rows="8" placeholder="Paste any text here — project description, pitch deck content, technical notes, feature list, business plan, grant application… I will learn it and be able to answer questions about it." class="pai-textarea"></textarea>
+            <button class="pai-learn-btn" onclick="ProjAIView.submitLearn()">LEARN THIS TEXT</button>
+            <div id="pai-learn-output"></div>
+          </div>
+
+          <!-- Knowledge base -->
+          <div class="pai-panel">
+            <div class="pai-panel-header">KNOWLEDGE BASE</div>
+            <div id="pai-knowledge-list" class="pai-knowledge-list">
+              <div class="pai-empty">Nothing learned yet</div>
+            </div>
+          </div>
+
+        </div><!-- /.pai-left -->
+
+        <!-- RIGHT: Chat -->
+        <div class="pai-right">
+          <div class="pai-chat-controls">
+            <select id="pai-project-filter" class="pai-select" style="flex:1">
+              <option value="">All Projects</option>
+            </select>
+            <button class="pai-clear-btn" onclick="ProjAIView.clearChat()">CLEAR CHAT</button>
+          </div>
+
+          <div id="pai-chat" class="pai-chat">
+            <div class="pai-chat-placeholder">[ Ask me anything about your projects — investor angles, technical details, grants, features, build structure… ]</div>
+          </div>
+
+          <div class="pai-input-row">
+            <textarea id="pai-question-input" rows="2" placeholder="Ask a question about your projects…" class="pai-question-input" onkeydown="ProjAIView.handleKey(event)"></textarea>
+            <button class="pai-ask-btn" onclick="ProjAIView.submitQuestion()">ASK</button>
+          </div>
+
+          <!-- Suggested questions -->
+          <div class="pai-suggestions">
+            <span class="pai-sug-label">TRY:</span>
+            <button class="pai-sug-btn" onclick="ProjAIView.askFollowUp('What projects do I have?')">What projects do I have?</button>
+            <button class="pai-sug-btn" onclick="ProjAIView.askFollowUp('Give me an investor pitch for my best project')">Investor pitch</button>
+            <button class="pai-sug-btn" onclick="ProjAIView.askFollowUp('What grants could I apply for?')">What grants?</button>
+            <button class="pai-sug-btn" onclick="ProjAIView.askFollowUp('Which of my projects is most investor ready?')">Which is ready?</button>
+          </div>
+        </div><!-- /.pai-right -->
+
+      </div>
+    </section>
   </main><!-- /#main -->
 
 </div><!-- /#app -->
@@ -591,6 +710,10 @@ EXAMPLES:
 <script src="js/cloner-engine.js"></script>
 <script src="js/url-ingestion-engine.js"></script>
 <script src="js/url-intelligence-view.js"></script>
+<script src="js/project-intelligence.js"></script>
+<script src="js/project-ai.js"></script>
+<script src="js/proj-intel-view.js"></script>
+<script src="js/proj-ai-view.js"></script>
 <script src="js/securescan-engine.js"></script>
 <script src="js/securescan-view.js"></script>
 <script src="js/app.js"></script>
