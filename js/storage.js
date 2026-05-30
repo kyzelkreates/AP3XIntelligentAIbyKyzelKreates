@@ -33,6 +33,10 @@ const DEFAULT_DB = {
   clone_prompts:           [],  // Stage 4: AI clone build prompt
   clone_pwa_scaffolds:     [],  // Stage 5: deployable PWA files
 
+  // ── SecureScan AI Module ────────────────────────────────────
+  securescan_reports: [],   // Full scan reports (max 50)
+  securescan_history: [],   // Lightweight history entries (max 200)
+
   // ── Existing knowledge graph ─────────────────────────────
   knowledgeGraph: {
     nodes: [],
@@ -49,6 +53,7 @@ const DEFAULT_DB = {
 
   meta: {
     totalIngestions:    0,
+    totalSecureScans:   0,
     totalUrlJobs:       0,
     lastActivity:       null,
     indexedEntities:    0
