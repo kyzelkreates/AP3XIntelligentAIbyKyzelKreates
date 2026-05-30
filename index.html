@@ -86,6 +86,10 @@
       <span class="nav-icon">⧉</span>
       <span class="nav-label">URL AI</span>
     </div>
+    <div class="nav-item" data-view="securescan">
+      <span class="nav-icon">🛡</span>
+      <span class="nav-label">SCAN</span>
+    </div>
   </nav>
 
   <!-- ── MAIN CONTENT ───────────────────────────────────── -->
@@ -464,6 +468,86 @@ EXAMPLES:
       </div>
     </section>
 
+    <!-- ════════════════════════════════════════════════
+         VIEW: SECURESCAN AI
+         ════════════════════════════════════════════════ -->
+    <section id="view-securescan" class="view">
+      <div class="view-header">
+        <span class="view-title">🛡 SECURESCAN AI</span>
+        <span class="view-sub">LOCAL-FIRST SECURITY AUDIT ENGINE</span>
+      </div>
+
+      <div class="ss-layout">
+
+        <!-- LEFT COLUMN: Input + Log + History -->
+        <div class="ss-left">
+
+          <!-- Stats -->
+          <div id="ss-stats" class="ss-stats-bar"></div>
+
+          <!-- URL Input -->
+          <div class="ss-input-panel">
+            <div class="ss-input-header">⧉ TARGET URL</div>
+            <div class="ss-input-row">
+              <input
+                id="ss-url-input"
+                type="url"
+                placeholder="https://example.com"
+                class="ss-url-input"
+                onkeydown="if(event.key==='Enter')SecureScanView.submitScan()"
+              />
+              <button id="ss-scan-btn" class="ss-scan-btn" onclick="SecureScanView.submitScan()">RUN SCAN</button>
+            </div>
+            <div class="ss-disclaimer">
+              DEFENSIVE ANALYSIS ONLY — no active probing, no port scanning, no exploitation
+            </div>
+          </div>
+
+          <!-- Progress bar -->
+          <div id="ss-progress-bar" class="ss-progress-bar" style="display:none">
+            <div id="ss-progress-fill" class="ss-progress-fill" style="width:0%"></div>
+          </div>
+
+          <!-- Pipeline Log -->
+          <div class="ss-log-panel">
+            <div class="ss-log-header">SCAN LOG</div>
+            <div id="ss-log" class="url-log-body"></div>
+          </div>
+
+          <!-- Scan History -->
+          <div class="ss-hist-panel">
+            <div class="ss-hist-header">
+              <span>SCAN HISTORY</span>
+              <button class="ss-clear-btn" onclick="SecureScanView.clearAllScans()">CLEAR ALL</button>
+            </div>
+            <div id="ss-history" class="ss-history-list"></div>
+          </div>
+
+        </div><!-- /.ss-left -->
+
+        <!-- RIGHT COLUMN: Report -->
+        <div class="ss-right">
+          <div id="ss-report-placeholder" class="ss-report-placeholder">
+            <div class="srp-icon">🛡</div>
+            <div class="srp-title">SECURESCAN AI</div>
+            <div class="srp-sub">Enter a URL and run a scan to generate a full security audit report</div>
+            <div class="srp-features">
+              <div class="srpf">✓ Security header analysis</div>
+              <div class="srpf">✓ XSS &amp; injection vectors</div>
+              <div class="srpf">✓ CSRF detection</div>
+              <div class="srpf">✓ Credential exposure</div>
+              <div class="srpf">✓ Supply chain risks</div>
+              <div class="srpf">✓ PWA configuration</div>
+              <div class="srpf">✓ Patch + fix code snippets</div>
+              <div class="srpf">✓ Exportable reports</div>
+            </div>
+          </div>
+          <div id="ss-report-panel" class="ss-report-panel hidden"></div>
+        </div><!-- /.ss-right -->
+
+      </div><!-- /.ss-layout -->
+    </section>
+
   </main><!-- /#main -->
 
 </div><!-- /#app -->
@@ -507,6 +591,8 @@ EXAMPLES:
 <script src="js/cloner-engine.js"></script>
 <script src="js/url-ingestion-engine.js"></script>
 <script src="js/url-intelligence-view.js"></script>
+<script src="js/securescan-engine.js"></script>
+<script src="js/securescan-view.js"></script>
 <script src="js/app.js"></script>
 
 <script>
