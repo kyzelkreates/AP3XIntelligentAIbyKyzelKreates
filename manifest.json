@@ -1,0 +1,40 @@
+{
+  "name": "AP3X Intelligent AI",
+  "short_name": "AP3X",
+  "description": "Local Intelligence Operating System by Kyzel Kreates",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Ingestion Engine",
+      "url": "/?view=ingestion",
+      "description": "Ingest raw intelligence"
+    },
+    {
+      "name": "Knowledge Graph",
+      "url": "/?view=graph",
+      "description": "View knowledge graph"
+    }
+  ]
+}
