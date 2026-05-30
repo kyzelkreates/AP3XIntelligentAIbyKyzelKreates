@@ -2206,3 +2206,235 @@ html, body {
 }
 
 .install-card-btn:hover { opacity: 0.85; }
+
+/* ============================================================
+   AP3X v2.0 — SYSTEM INTELLIGENCE ENGINE STYLES
+   ============================================================ */
+
+/* ── Tech Stack Cards ──────────────────────────────────────── */
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 10px 0 16px;
+}
+.tech-card {
+  background: rgba(212,175,55,0.04);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.tc-label { font-size: 8px; color: var(--gold); letter-spacing: 2px; margin-bottom: 6px; }
+.tc-value { font-size: 10px; line-height: 1.6; }
+.tc-sub   { font-size: 9px; color: var(--text-dim); margin-top: 4px; }
+.tc-flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+/* ── Confidence Signal Badges ──────────────────────────────── */
+.sig-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  margin: 2px;
+}
+.sig-confirmed { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+.sig-likely    { background: rgba(212,175,55,0.15); color: var(--gold);  border: 1px solid rgba(212,175,55,0.3); }
+.sig-inferred  { background: rgba(192,192,192,0.1); color: var(--text-dim); border: 1px solid var(--border); }
+.sig-conf      { font-size: 8px; color: var(--text-mute); letter-spacing: 0.5px; }
+
+/* ── Feature / Status Flags ────────────────────────────────── */
+.flag {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+.flag-on  { background: rgba(0,255,136,0.12); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
+.flag-off { background: rgba(255,255,255,0.04); color: var(--text-mute); border: 1px solid rgba(255,255,255,0.08); }
+
+/* ── AI Agent Tab ──────────────────────────────────────────── */
+.ai-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  background: rgba(138,43,226,0.2);
+  color: #C070FF;
+  border: 1px solid rgba(138,43,226,0.4);
+}
+.ai-badge-likely    { background: rgba(138,43,226,0.2); color: #C070FF; }
+.ai-badge-inferred  { background: rgba(192,192,192,0.1); color: var(--text-dim); }
+.ai-badge-confirmed { background: rgba(0,255,136,0.15); color: var(--green); }
+
+.agent-role-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.agent-role-name { font-size: 11px; color: var(--white); min-width: 90px; }
+.agent-role-type { font-size: 9px; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; flex: 1; }
+
+.capability-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 6px;
+}
+.cap-item   { font-size: 10px; padding: 5px 8px; border-radius: 4px; }
+.cap-on  { color: var(--green); background: rgba(0,255,136,0.07); border: 1px solid rgba(0,255,136,0.15); }
+.cap-off { color: var(--text-mute); background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); }
+
+/* ── Data Flow Tab ─────────────────────────────────────────── */
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 10px;
+}
+.flow-type   { color: var(--gold); min-width: 120px; font-size: 9px; letter-spacing: 0.5px; }
+.flow-detail { color: var(--text); flex: 1; }
+.flow-item   { color: var(--text); }
+
+/* ── Architecture Diagram ──────────────────────────────────── */
+.arch-diagram {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: var(--green);
+  background: rgba(0,255,136,0.03);
+  border: 1px solid rgba(0,255,136,0.1);
+  border-radius: var(--radius);
+  padding: 14px;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+/* ── Commercial Tab ────────────────────────────────────────── */
+.inference-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 9px;
+  background: rgba(212,175,55,0.1);
+  color: var(--gold);
+  border: 1px solid rgba(212,175,55,0.2);
+  font-style: italic;
+}
+
+/* ── Maturity Scores Tab ───────────────────────────────────── */
+.maturity-overall {
+  text-align: center;
+  padding: 20px;
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: var(--radius);
+  background: rgba(212,175,55,0.04);
+  margin-bottom: 16px;
+}
+.mo-score {
+  font-size: 48px;
+  font-weight: bold;
+  color: var(--gold);
+  line-height: 1;
+}
+.mo-denom { font-size: 18px; color: var(--text-dim); }
+.mo-label { font-size: 11px; color: var(--text); letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+
+.maturity-bars { display: flex; flex-direction: column; gap: 14px; }
+.maturity-row  { display: flex; align-items: center; gap: 10px; }
+.maturity-key  { font-size: 9px; color: var(--gold); letter-spacing: 1px; min-width: 50px; }
+.maturity-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.maturity-bar-fill  { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.score-fill-high    { background: linear-gradient(90deg, #00FF88, #00CC70); }
+.score-fill-mid     { background: linear-gradient(90deg, #D4AF37, #A08020); }
+.score-fill-low     { background: linear-gradient(90deg, #FF5050, #CC3030); }
+.maturity-score-num { font-size: 10px; color: var(--white); min-width: 30px; text-align: right; }
+.maturity-label-text{ font-size: 9px; color: var(--text-dim); min-width: 80px; }
+.maturity-note      { font-size: 8px; color: var(--text-mute); padding-left: 60px; margin-top: -8px; }
+
+/* ── Score cards (summary tab) ─────────────────────────────── */
+.tab-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+@media (max-width: 600px) {
+  .tab-grid-5 { grid-template-columns: repeat(3, 1fr); }
+}
+.score-card        { border-width: 1.5px; }
+.score-card.score-high { border-color: rgba(0,255,136,0.3); }
+.score-card.score-mid  { border-color: rgba(212,175,55,0.3); }
+.score-card.score-low  { border-color: rgba(255,80,80,0.3); }
+.tsc-denom { font-size: 10px; color: var(--text-dim); }
+
+/* ── Blueprint Tab ─────────────────────────────────────────── */
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+.stack-card {
+  background: rgba(212,175,55,0.04);
+  border: 1px solid rgba(212,175,55,0.15);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+.sc-layer { font-size: 7px; color: var(--gold); letter-spacing: 2px; margin-bottom: 4px; }
+.sc-value { font-size: 9px; color: var(--white); line-height: 1.4; }
+
+.component-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.component-row  {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 9px;
+  background: rgba(255,255,255,0.03);
+  border-left: 3px solid transparent;
+}
+.component-row.priority-critical { border-left-color: var(--green); }
+.component-row.priority-high     { border-left-color: var(--gold); }
+.component-row.priority-medium   { border-left-color: #4DA3FF; }
+.component-row.priority-low      { border-left-color: var(--text-mute); }
+.comp-layer { color: var(--gold); min-width: 70px; font-size: 8px; letter-spacing: 1px; }
+.comp-name  { color: var(--white); flex: 1; }
+.comp-notes { color: var(--text-dim); font-size: 8px; }
+.priority-badge-critical { background: rgba(0,255,136,0.15); color: var(--green); padding: 1px 6px; border-radius: 3px; }
+.priority-badge-high     { background: rgba(212,175,55,0.15); color: var(--gold); padding: 1px 6px; border-radius: 3px; }
+.priority-badge-medium   { background: rgba(77,163,255,0.15); color: #4DA3FF; padding: 1px 6px; border-radius: 3px; }
+.priority-badge-low      { background: rgba(255,255,255,0.05); color: var(--text-mute); padding: 1px 6px; border-radius: 3px; }
+
+.phase-block { margin-bottom: 12px; }
+.phase-name  { font-size: 9px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.phase-item  { font-size: 10px; color: var(--text); padding: 3px 0 3px 12px; border-left: 1px solid rgba(212,175,55,0.2); margin-left: 6px; }
+
+/* ── Summary Hero ──────────────────────────────────────────── */
+.summary-hero {
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(212,175,55,0.06), rgba(138,43,226,0.06));
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+}
+.sh-name     { font-size: 18px; font-weight: bold; color: var(--white); margin-bottom: 4px; }
+.sh-category { font-size: 9px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
+.sh-desc     { font-size: 10px; color: var(--text); line-height: 1.6; }
