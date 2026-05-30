@@ -89,22 +89,27 @@ const URLIntelligenceView = (() => {
       return;
     }
 
-    const snap   = AP3X_Storage.getRecord('site_snapshots',       jobId);
-    const model  = AP3X_Storage.getRecord('site_models',          jobId);
-    const spec   = AP3X_Storage.getRecord('project_specs',        jobId);
-    const bp     = AP3X_Storage.getRecord('system_blueprints',    jobId);
-    const ui     = AP3X_Storage.getRecord('ui_blueprints',        jobId);
-    const inv    = AP3X_Storage.getRecord('investor_packs',       jobId);
-    const com    = AP3X_Storage.getRecord('commercial_models',    jobId);
-    const mat    = AP3X_Storage.getRecord('maturity_scores',      jobId);
+    const snap   = AP3X_Storage.getRecord('site_snapshots',         jobId);
+    const model  = AP3X_Storage.getRecord('site_models',            jobId);
+    const spec   = AP3X_Storage.getRecord('project_specs',          jobId);
+    const bp     = AP3X_Storage.getRecord('system_blueprints',      jobId);
+    const ui     = AP3X_Storage.getRecord('ui_blueprints',          jobId);
+    const inv    = AP3X_Storage.getRecord('investor_packs',         jobId);
+    const com    = AP3X_Storage.getRecord('commercial_models',      jobId);
+    const mat    = AP3X_Storage.getRecord('maturity_scores',        jobId);
     const rep    = AP3X_Storage.getRecord('replication_blueprints', jobId);
+    const clDom  = AP3X_Storage.getRecord('clone_dom_structures',   jobId);
+    const clStr  = AP3X_Storage.getRecord('clone_structural_models',jobId);
+    const clSys  = AP3X_Storage.getRecord('clone_system_designs',   jobId);
+    const clPrm  = AP3X_Storage.getRecord('clone_prompts',          jobId);
+    const clPwa  = AP3X_Storage.getRecord('clone_pwa_scaffolds',    jobId);
 
     if (!spec || !inv) { showLog('[ERROR] Records missing from SSOT', 'error'); return; }
-    renderOutputPanel(snap, model, spec, bp, ui, inv, com, mat, rep);
+    renderOutputPanel(snap, model, spec, bp, ui, inv, com, mat, rep, clDom, clStr, clSys, clPrm, clPwa);
   }
 
   // ── Output Panel ──────────────────────────────────────────
-  function renderOutputPanel(snap, model, spec, bp, ui, inv, com, mat, rep) {
+  function renderOutputPanel(snap, model, spec, bp, ui, inv, com, mat, rep, clDom, clStr, clSys, clPrm, clPwa) {
     const ph    = document.getElementById('url-output-placeholder');
     const panel = document.getElementById('url-output-content');
     if (ph) ph.classList.add('hidden');
@@ -134,6 +139,7 @@ const URLIntelligenceView = (() => {
         <button class="intel-tab" onclick="URLIntelligenceView.showTab('blueprint',this)">BLUEPRINT</button>
         <button class="intel-tab" onclick="URLIntelligenceView.showTab('product',this)">PRODUCT</button>
         <button class="intel-tab" onclick="URLIntelligenceView.showTab('investor',this)">INVESTOR</button>
+        <button class="intel-tab" onclick="URLIntelligenceView.showTab('cloner',this)">⬡ CLONER</button>
         <button class="intel-tab" onclick="URLIntelligenceView.showTab('status',this)">STATUS</button>
       </div>
 
@@ -146,6 +152,7 @@ const URLIntelligenceView = (() => {
       <div id="tab-blueprint"  class="tab-content hidden">${renderBlueprintTab(rep)}</div>
       <div id="tab-product"    class="tab-content hidden">${renderProductTab(spec, ui)}</div>
       <div id="tab-investor"   class="tab-content hidden">${renderInvestorTab(inv)}</div>
+      <div id="tab-cloner"     class="tab-content hidden">${renderClonerTab(clDom, clStr, clSys, clPrm, clPwa)}</div>
       <div id="tab-status"     class="tab-content hidden">${renderStatusTab(snap, model)}</div>
     `;
   }
@@ -662,7 +669,231 @@ const URLIntelligenceView = (() => {
       </div>`;
   }
 
-  // ── Helpers ───────────────────────────────────────────────
+  // ════════════════════════════════════════════════════════════
+  // TAB: SITE → SYSTEM CLONER (Module 6)
+  // ════════════════════════════════════════════════════════════
+  // ════════════════════════════════════════════════════════════
+  // TAB: SITE → SYSTEM CLONER (Module 6)
+  // ════════════════════════════════════════════════════════════
+  function renderClonerTab(clDom, clStr, clSys, clPrm, clPwa) {
+    if (!clPrm && !clPwa) {
+      return '<div class="output-idle">[ CLONER MODULE — NO DATA. RE-ANALYSE URL TO GENERATE. ]</div>';
+    }
+
+    const flows      = (clStr && clStr.userFlowMap)      || [];
+    const features   = (clStr && clStr.featureMap)       || [];
+    const layers     = (clSys && clSys.layeredArchitecture) || [];
+    const contract   = (clSys && clSys.apiContract)      || {};
+    const logic      = (clStr && clStr.logicSeparation) || (clSys && clSys.logicSeparation) || {};
+    const ssot       = (clSys && clSys.ssotDataModel)    || {};
+    const pwaFiles   = (clPwa && clPwa.files)            || {};
+    const domSigs    = (clDom && clDom.domSignals)       || {};
+    const components = (clDom && clDom.componentGraph && clDom.componentGraph.nodes) || [];
+    const pageTree   = (clDom && clDom.pageTree)         || {};
+    const interactions = ((clDom && clDom.interactionPoints) || []).slice(0, 12);
+
+    var firstFileKey  = Object.keys(pwaFiles)[0] || '';
+    var firstFileCont = firstFileKey ? _escapeHtml((pwaFiles[firstFileKey] || {}).content || '') : '';
+    var fileTabsHtml  = Object.keys(pwaFiles).map(function(fname, i) {
+      return '<button class="file-tab ' + (i===0?'active':'') + '" onclick="URLIntelligenceView.showFile(\'' + fname + '\',this)">' + fname + '</button>';
+    }).join('');
+
+    var stageHtml = [
+      _stageCard('1','DOM EXTRACTION',   clDom ? 'complete':'pending', components.length + ' components · ' + (pageTree.totalPages||0) + ' pages'),
+      _stageCard('2','STRUCTURAL MODEL', clStr ? 'complete':'pending', flows.length + ' flows · ' + features.length + ' features mapped'),
+      _stageCard('3','SYSTEM DESIGN',    clSys ? 'complete':'pending', layers.length + ' layers · ' + ((contract.endpoints||[]).length) + ' endpoints'),
+      _stageCard('4','CLONE PROMPT',     clPrm ? 'complete':'pending', (clPrm&&clPrm.sections||0) + ' sections · ' + (clPrm&&clPrm.promptLength||0) + ' chars'),
+      _stageCard('5','PWA SCAFFOLD',     clPwa ? 'complete':'pending', Object.keys(pwaFiles).length + ' files · deploy-ready')
+    ].join('');
+
+    var compHtml = components.map(function(c) {
+      return '<div class="comp-chip comp-' + (c.type||'') + '">' + c.name + ' <span class="comp-src">' + (c.source||'') + '</span></div>';
+    }).join('') || '<span class="muted">None extracted</span>';
+
+    var flagsHtml = [
+      _domFlag('Service Worker', domSigs.hasServiceWorker),
+      _domFlag('PWA Manifest',   domSigs.hasManifest),
+      _domFlag('Lazy Load',      domSigs.hasLazyLoad),
+      _domFlag('Dark Mode',      domSigs.hasDarkMode),
+      _domFlag('i18n',           domSigs.hasI18n),
+      _domFlag('Accessibility',  domSigs.hasAccessibility),
+      _domFlag('Animations',     domSigs.hasAnimations),
+      _domFlag('Modal System',   domSigs.hasModalSystem)
+    ].join('');
+
+    var interactionHtml = interactions.map(function(i) {
+      return '<div class="interaction-row">' +
+        '<span class="int-element">' + (i.element||'') + '</span>' +
+        '<span class="int-trigger">' + (i.trigger||'').toUpperCase() + '</span>' +
+        '<span class="int-label">' + ((i.label||i.action||'').slice(0,30)) + '</span>' +
+        '<span class="int-arrow">→</span>' +
+        '<span class="int-result">' + (i.result||'') + '</span>' +
+        '</div>';
+    }).join('') || '<div class="muted ts-value">None mapped</div>';
+
+    var flowsHtml = flows.map(function(f) {
+      var stepsHtml = (f.steps||[]).map(function(s) {
+        return '<div class="fb-step">' +
+          '<span class="step-num">' + s.step + '</span>' +
+          '<span class="step-action">' + s.action + '</span>' +
+          '<span class="step-arrow">→</span>' +
+          '<span class="step-result">' + s.result + '</span>' +
+          '</div>';
+      }).join('');
+      return '<div class="flow-block">' +
+        '<div class="fb-name">' + f.name + '</div>' +
+        '<div class="fb-entry">Entry: ' + f.entry + '</div>' +
+        '<div class="fb-steps">' + stepsHtml + '</div>' +
+        '</div>';
+    }).join('') || '<div class="muted ts-value">No flows detected</div>';
+
+    var layersHtml = layers.map(function(l) {
+      var compsHtml = (l.components||[]).map(function(c) { return '<span class="layer-chip">' + c + '</span>'; }).join('');
+      return '<div class="layer-row">' +
+        '<div class="lr-layer">' + l.layer + '</div>' +
+        '<div class="lr-tech">' + l.technology + '</div>' +
+        '<div class="lr-resp">' + l.responsibility + '</div>' +
+        '<div class="lr-comps">' + compsHtml + '</div>' +
+        '</div>';
+    }).join('');
+
+    var uiLogicHtml  = (logic.uiLogic||[]).map(function(l) { return '<div class="lc-item">▸ ' + l + '</div>'; }).join('');
+    var bizLogicHtml = (logic.businessLogic||[]).map(function(l) { return '<div class="lc-item">▸ ' + l + '</div>'; }).join('');
+    var stLogicHtml  = (logic.stateLogic||[]).map(function(l) { return '<div class="lc-item">▸ ' + l + '</div>'; }).join('');
+
+    var apiHtml = '';
+    if ((contract.endpoints||[]).length > 0) {
+      var endpointRows = (contract.endpoints||[]).slice(0,15).map(function(ep) {
+        return '<div class="api-row">' +
+          '<span class="api-method method-' + ep.method.toLowerCase() + '">' + ep.method + '</span>' +
+          '<span class="api-path">' + ep.path + '</span>' +
+          '<span class="api-feature">' + ep.feature + '</span>' +
+          '<span class="api-auth">' + (ep.auth ? '🔒' : '🔓') + '</span>' +
+          '</div>';
+      }).join('');
+      apiHtml = '<div class="cloner-section">' +
+        '<div class="cs-label">[ STAGE 3 — API CONTRACT (REST · ' + (contract.authScheme||'JWT') + ') ]</div>' +
+        '<div class="api-list">' + endpointRows + '</div>' +
+        '</div>';
+    }
+
+    var entityHtml = (ssot.persistedEntities||[]).map(function(e) {
+      var fieldHtml = (e.fields||[]).slice(0,5).map(function(f) { return '<div class="schema-field">· ' + f + '</div>'; }).join('');
+      return '<div class="schema-card">' +
+        '<div class="schema-name">' + e.name + '</div>' +
+        '<div class="schema-source">' + (e.ssotKey||'') + '</div>' +
+        fieldHtml + '</div>';
+    }).join('');
+
+    var featureCountStr = (clPrm && clPrm.featureCount) || 0;
+    var pageCountStr    = (clPrm && clPrm.pageCount)    || 0;
+
+    return '<div class="cloner-header">' +
+        '<div class="ch-title">⬡ SITE → SYSTEM CLONER AGENT</div>' +
+        '<div class="ch-sub">5-stage reverse-engineering pipeline — ' + featureCountStr + ' features · ' + pageCountStr + ' pages · ' + Object.keys(pwaFiles).length + ' files generated</div>' +
+        '</div>' +
+      '<div class="cloner-stages">' + stageHtml + '</div>' +
+
+      '<div class="cloner-section">' +
+        '<div class="cs-label">[ STAGE 1 — DOM STRUCTURE ]</div>' +
+        '<div class="comp-grid">' + compHtml + '</div>' +
+        _row('PAGE TREE', (pageTree.totalPages||0) + ' pages — root: ' + (pageTree.root||'/')) +
+        '<div class="cloner-flags">' + flagsHtml + '</div>' +
+        '</div>' +
+
+      '<div class="cloner-section">' +
+        '<div class="cs-label">[ STAGE 2 — INTERACTION MAP (click → action → result) ]</div>' +
+        '<div class="interaction-list">' + interactionHtml + '</div>' +
+        '</div>' +
+
+      '<div class="cloner-section">' +
+        '<div class="cs-label">[ STAGE 2 — USER FLOW MAP ]</div>' +
+        flowsHtml +
+        '</div>' +
+
+      '<div class="cloner-section">' +
+        '<div class="cs-label">[ STAGE 3 — LAYERED SYSTEM ARCHITECTURE ]</div>' +
+        layersHtml +
+        '</div>' +
+
+      '<div class="cloner-section">' +
+        '<div class="cs-label">[ STAGE 3 — LOGIC SEPARATION ]</div>' +
+        '<div class="logic-grid">' +
+          '<div class="logic-col"><div class="lc-label">UI LOGIC</div>' + uiLogicHtml + '</div>' +
+          '<div class="logic-col"><div class="lc-label">BUSINESS LOGIC</div>' + bizLogicHtml + '</div>' +
+          '<div class="logic-col"><div class="lc-label">STATE LOGIC (SSOT)</div>' + stLogicHtml + '</div>' +
+        '</div></div>' +
+
+      apiHtml +
+
+      '<div class="cloner-section">' +
+        '<div class="cs-label">[ STAGE 3 — SSOT DATA MODEL ]</div>' +
+        '<div class="ts-value muted">' + (ssot.ssotPattern||'') + '</div>' +
+        '<div class="schema-grid" style="margin-top:10px">' + entityHtml + '</div>' +
+        '</div>' +
+
+      '<div class="cloner-section">' +
+        '<div class="cs-label">[ STAGE 4 — AI CLONE BUILD PROMPT ]</div>' +
+        '<div class="prompt-meta">' +
+          (clPrm&&clPrm.sections||0) + ' sections · ' + (clPrm&&clPrm.featureCount||0) + ' features · ' + (clPrm&&clPrm.promptLength||0) + ' chars ' +
+          '<button class="btn-copy-prompt" onclick="URLIntelligenceView.copyPrompt()">COPY PROMPT</button>' +
+        '</div>' +
+        '<pre id="clone-prompt-text" class="prompt-block">' + _escapeHtml((clPrm&&clPrm.prompt)||'Prompt not generated') + '</pre>' +
+        '</div>' +
+
+      '<div class="cloner-section">' +
+        '<div class="cs-label">[ STAGE 5 — PWA SCAFFOLD — ' + Object.keys(pwaFiles).length + ' FILES ]</div>' +
+        '<div class="ts-value muted" style="margin-bottom:8px;white-space:pre">' + _escapeHtml((clPwa&&clPwa.fileStructure)||'') + '</div>' +
+        '<div class="file-tabs">' + fileTabsHtml + '</div>' +
+        '<div id="scaffold-file-content" class="scaffold-file">' +
+          '<pre class="code-block">' + firstFileCont + '</pre>' +
+        '</div>' +
+        '</div>';
+  }
+
+  function _stageCard(num, label, status, detail) {
+    var icon = status === 'complete' ? '✓' : '◌';
+    var cls  = status === 'complete' ? 'stage-complete' : 'stage-pending';
+    return '<div class="stage-card ' + cls + '">' +
+      '<div class="sc-num">' + icon + ' ' + num + '</div>' +
+      '<div class="sc-label">' + label + '</div>' +
+      '<div class="sc-detail">' + detail + '</div>' +
+      '</div>';
+  }
+
+  function _domFlag(label, active) {
+    return '<span class="dom-flag ' + (active?'df-on':'df-off') + '">' + (active?'✓':'✗') + ' ' + label + '</span>';
+  }
+
+  function _escapeHtml(str) {
+    return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function copyPrompt() {
+    var el = document.getElementById('clone-prompt-text');
+    if (!el) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(el.textContent)
+        .then(function() { showLog('[ COPIED ] Clone build prompt copied to clipboard', 'success'); })
+        .catch(function() { showLog('[ MANUAL ] Select and copy the prompt text', 'info'); });
+    } else {
+      showLog('[ MANUAL ] Select and copy the prompt text above', 'info');
+    }
+  }
+
+  function showFile(filename, btn) {
+    var job = activeJobId;
+    var pwa = job ? AP3X_Storage.getRecord('clone_pwa_scaffolds', job) : null;
+    if (!pwa) return;
+    var file = pwa.files && pwa.files[filename];
+    if (!file) return;
+    document.querySelectorAll('.file-tab').forEach(function(t) { t.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    var el = document.getElementById('scaffold-file-content');
+    if (el) el.innerHTML = '<pre class="code-block">' + _escapeHtml(file.content) + '</pre>';
+  }
+
+    // ── Helpers ───────────────────────────────────────────────
   function _row(label, value) {
     if (value === null || value === undefined || value === '') return '';
     return `
@@ -727,7 +958,7 @@ const URLIntelligenceView = (() => {
 
   function init() { renderJobList(); }
 
-  return { init, renderJobList, submitUrl, loadJob, showTab, deleteJob };
+  return { init, renderJobList, submitUrl, loadJob, showTab, deleteJob, copyPrompt, showFile };
 })();
 
 window.URLIntelligenceView = URLIntelligenceView;
