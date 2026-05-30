@@ -58,17 +58,7 @@
     </div>
   </header>
 
-  <!-- ── INSTALL BANNER (Android/Desktop) ───────────────── -->
-  <div id="install-banner" class="hidden">
-    <span class="install-text">▲ INSTALL AP3X INTELLIGENT AI — RUN FULLY OFFLINE</span>
-    <button class="btn-install" onclick="AP3X_App.triggerInstall()">INSTALL AP3X INTELLIGENT AI</button>
-  </div>
-
-  <!-- ── iOS INSTALL BANNER ─────────────────────────────── -->
-  <div id="ios-install-banner" class="hidden">
-    <span class="install-text">▲ Install AP3X — Tap Share then "Add to Home Screen"</span>
-    <button class="btn-install" onclick="AP3X_App.triggerInstall()">HOW TO INSTALL</button>
-  </div>
+  <!-- Install FAB and overlays injected by InstallEngine -->
 
   <!-- ── SIDEBAR NAV ────────────────────────────────────── -->
   <nav id="nav">
@@ -108,6 +98,16 @@
       <div class="view-header">
         <span class="view-title">SYSTEM DASHBOARD</span>
         <span class="view-sub">AP3X INTELLIGENCE STATUS</span>
+      </div>
+
+      <!-- Install Card — shown when not installed -->
+      <div id="dashboard-install-card" class="install-card" onclick="InstallEngine.triggerInstall()">
+        <div class="install-card-icon">⊕</div>
+        <div class="install-card-body">
+          <div class="install-card-title">INSTALL AP3X</div>
+          <div class="install-card-sub">One touch · Home screen icon · Fully offline · All data local</div>
+        </div>
+        <button class="install-card-btn">INSTALL</button>
       </div>
 
       <!-- Stats Row -->
@@ -493,6 +493,7 @@ EXAMPLES:
 <script src="js/knowledge-engine.js"></script>
 <script src="js/explanation-engine.js"></script>
 <script src="js/graph-renderer.js"></script>
+<script src="js/install-engine.js"></script>
 <script src="js/site-model-engine.js"></script>
 <script src="js/project-compiler.js"></script>
 <script src="js/investor-engine.js"></script>
@@ -507,6 +508,17 @@ EXAMPLES:
       navigator.serviceWorker.register('sw.js')
         .then(reg => console.log('[AP3X] Service Worker registered:', reg.scope))
         .catch(err => console.warn('[AP3X] SW registration failed:', err));
+    });
+  }
+
+  // Initialise install engine (captures beforeinstallprompt before any async work)
+  if (typeof InstallEngine !== 'undefined') {
+    InstallEngine.init().then(() => {
+      // Hide dashboard install card if already installed
+      const p = InstallEngine.platform();
+      if (p.standalone) {
+        document.getElementById('dashboard-install-card')?.remove();
+      }
     });
   }
 </script>
