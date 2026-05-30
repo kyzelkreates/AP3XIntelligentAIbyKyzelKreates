@@ -92,6 +92,10 @@
       <span class="nav-icon">⬡</span>
       <span class="nav-label">GRAPH</span>
     </div>
+    <div class="nav-item" data-view="url-intel">
+      <span class="nav-icon">⧉</span>
+      <span class="nav-label">URL AI</span>
+    </div>
   </nav>
 
   <!-- ── MAIN CONTENT ───────────────────────────────────── -->
@@ -127,6 +131,10 @@
         <div class="stat-card">
           <div class="stat-value" id="stat-entities">0</div>
           <div class="stat-label">ENTITIES</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-url-jobs">0</div>
+          <div class="stat-label">URL ANALYSES</div>
         </div>
       </div>
 
@@ -363,6 +371,87 @@ EXAMPLES:
       </div>
     </section>
 
+
+    <!-- ════════════════════════════════════════════════
+         VIEW: URL INTELLIGENCE ENGINE
+         ════════════════════════════════════════════════ -->
+    <section id="view-url-intel" class="view">
+      <div class="view-header">
+        <span class="view-title">URL INTELLIGENCE ENGINE</span>
+        <span class="view-sub">URL → PRODUCT SPEC + ARCHITECTURE + INVESTOR PACK</span>
+      </div>
+
+      <div class="url-intel-layout">
+
+        <!-- LEFT: Input + Job List -->
+        <div class="url-left-col">
+
+          <!-- URL Input Panel -->
+          <div class="url-input-panel">
+            <div class="url-input-header">⧉ CONTROLLED CRAWLER INPUT</div>
+            <div class="url-input-controls">
+              <div class="field-label">TARGET URL</div>
+              <div class="url-input-row">
+                <input
+                  type="url"
+                  id="url-input"
+                  class="url-text-input"
+                  placeholder="https://example.com"
+                  spellcheck="false"
+                  autocomplete="off"
+                  onkeydown="if(event.key==='Enter') URLIntelligenceView.submitUrl()"
+                />
+                <button class="btn-crawl" onclick="URLIntelligenceView.submitUrl()">
+                  ANALYSE
+                </button>
+              </div>
+              <div class="field-label" style="color:var(--text-mute);font-size:7px;margin-top:4px;">
+                Public URLs only · Controlled crawler · No external AI browsing
+              </div>
+            </div>
+          </div>
+
+          <!-- Log Panel -->
+          <div class="url-log-panel">
+            <div class="url-log-header">PIPELINE LOG</div>
+            <div id="url-log" class="url-log-body"></div>
+          </div>
+
+          <!-- Job List -->
+          <div class="url-jobs-panel">
+            <div class="url-jobs-header">
+              ANALYSIS JOBS
+              <span id="url-job-count" class="job-count"></span>
+            </div>
+            <div id="url-job-list" class="url-job-list">
+              <div class="empty-state">[ NO JOBS ]</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT: Intelligence Output -->
+        <div class="url-right-col">
+          <div id="url-output-placeholder">
+            <div class="output-idle-large">
+              <div class="oil-icon">⧉</div>
+              <div class="oil-title">URL INTELLIGENCE ENGINE</div>
+              <div class="oil-sub">Submit a public URL to generate a complete intelligence pack</div>
+              <div class="oil-bullets">
+                <div>◈ Product Specification</div>
+                <div>◈ System Architecture Blueprint</div>
+                <div>◈ Database Schema Model</div>
+                <div>◈ UI Structure Map</div>
+                <div>◈ Investor Intelligence Pack</div>
+              </div>
+            </div>
+          </div>
+          <div id="url-output-content" class="hidden url-output-content"></div>
+        </div>
+
+      </div>
+    </section>
+
   </main><!-- /#main -->
 
 </div><!-- /#app -->
@@ -404,6 +493,11 @@ EXAMPLES:
 <script src="js/knowledge-engine.js"></script>
 <script src="js/explanation-engine.js"></script>
 <script src="js/graph-renderer.js"></script>
+<script src="js/site-model-engine.js"></script>
+<script src="js/project-compiler.js"></script>
+<script src="js/investor-engine.js"></script>
+<script src="js/url-ingestion-engine.js"></script>
+<script src="js/url-intelligence-view.js"></script>
 <script src="js/app.js"></script>
 
 <script>
