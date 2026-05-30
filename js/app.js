@@ -38,6 +38,7 @@
       case 'analysis':   renderAnalysis();   break;
       case 'graph':      renderGraph();      break;
       case 'url-intel':  renderURLIntel();   break;
+      case 'securescan': renderSecureScan(); break;
       default:           renderDashboard();  break;
     }
   }
@@ -340,6 +341,12 @@
   function renderURLIntel() {
     if (typeof URLIntelligenceView !== 'undefined') {
       URLIntelligenceView.init();
+    }
+  }
+
+  function renderSecureScan() {
+    if (typeof SecureScanView !== 'undefined') {
+      SecureScanView.init();
     }
   }
 
