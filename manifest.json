@@ -2,8 +2,8 @@
   "name": "AP3X Intelligent AI",
   "short_name": "AP3X",
   "description": "Local Intelligence Operating System by Kyzel Kreates",
-  "start_url": "/AP3XIntelligentAIbyKyzelKreates/",
-  "scope":     "/AP3XIntelligentAIbyKyzelKreates/",
+  "start_url": "/",
+  "scope":     "/",
   "display":   "standalone",
   "orientation": "any",
   "background_color": "#050505",
@@ -27,17 +27,17 @@
   "shortcuts": [
     {
       "name": "Ingestion Engine",
-      "url":  "/AP3XIntelligentAIbyKyzelKreates/?view=ingestion",
+      "url":  "/?view=ingestion",
       "description": "Ingest raw intelligence"
     },
     {
       "name": "URL Intelligence",
-      "url":  "/AP3XIntelligentAIbyKyzelKreates/?view=url-intel",
+      "url":  "/?view=url-intel",
       "description": "Analyse any URL"
     },
     {
       "name": "Knowledge Graph",
-      "url":  "/AP3XIntelligentAIbyKyzelKreates/?view=graph",
+      "url":  "/?view=graph",
       "description": "View knowledge graph"
     }
   ]
