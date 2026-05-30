@@ -162,14 +162,26 @@
         </div>
       </div>
 
-      <!-- Recent Projects -->
-      <div class="panel">
-        <div class="panel-header">
-          RECENT INTELLIGENCE
-          <button class="btn-secondary" onclick="AP3X_App.navigateTo('ingestion')" style="font-size:8px;padding:4px 10px;">+ INGEST</button>
+      <!-- Recent Projects + URL Jobs -->
+      <div class="dashboard-row">
+        <div class="panel">
+          <div class="panel-header">
+            RECENT INTELLIGENCE
+            <button class="btn-secondary" onclick="AP3X_App.navigateTo('ingestion')" style="font-size:8px;padding:4px 10px;">+ INGEST</button>
+          </div>
+          <div class="panel-body" id="recent-projects">
+            <div class="empty-state">[ NO PROJECTS — USE INGESTION ENGINE ]</div>
+          </div>
         </div>
-        <div class="panel-body" id="recent-projects">
-          <div class="empty-state">[ NO PROJECTS INDEXED — USE INGESTION ENGINE ]</div>
+
+        <div class="panel">
+          <div class="panel-header">
+            RECENT URL ANALYSES
+            <button class="btn-secondary" onclick="AP3X_App.navigateTo('url-intel')" style="font-size:8px;padding:4px 10px;">+ ANALYSE URL</button>
+          </div>
+          <div class="panel-body" id="recent-url-jobs">
+            <div class="empty-state">[ NO URL ANALYSES — USE URL AI ]</div>
+          </div>
         </div>
       </div>
     </section>
@@ -456,12 +468,7 @@ EXAMPLES:
 
 </div><!-- /#app -->
 
-<!-- ════════════════════════════════════════════════════════
-     iOS INSTALL OVERLAY
-     ════════════════════════════════════════════════════════ -->
-<div id="ios-install-overlay" class="hidden">
-  <div class="ios-overlay-card">
-    <div class="ios-overlay-title">INSTALL AP3X</div>
+<!-- iOS install overlay: handled by InstallEngine -->
     <div class="ios-overlay-sub">RUN FULLY OFFLINE · ONE-TOUCH ACCESS</div>
 
     <div class="ios-steps">
@@ -503,22 +510,12 @@ EXAMPLES:
 
 <script>
   // Register Service Worker
+  // Register Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('[AP3X] Service Worker registered:', reg.scope))
-        .catch(err => console.warn('[AP3X] SW registration failed:', err));
-    });
-  }
-
-  // Initialise install engine (captures beforeinstallprompt before any async work)
-  if (typeof InstallEngine !== 'undefined') {
-    InstallEngine.init().then(() => {
-      // Hide dashboard install card if already installed
-      const p = InstallEngine.platform();
-      if (p.standalone) {
-        document.getElementById('dashboard-install-card')?.remove();
-      }
+        .then(reg => console.log('[AP3X SW] Registered:', reg.scope))
+        .catch(err => console.warn('[AP3X SW] Failed:', err.message));
     });
   }
 </script>
