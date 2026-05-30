@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#050505" />
+  <meta name="description" content="AP3X Intelligent AI — Local Intelligence Operating System by Kyzel Kreates" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="AP3X" />
+  <meta name="mobile-web-app-capable" content="yes" />
+
+  <title>AP3X Intelligent AI</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     APP SHELL
+     ════════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── HEADER ─────────────────────────────────────────── -->
+  <header id="header">
+    <div class="header-brand">
+      <div class="header-logo">A3</div>
+      <div class="header-title">
+        <div class="header-title-main">AP3X Intelligent AI</div>
+        <div class="header-title-sub">by Kyzel Kreates · Local Intelligence OS</div>
+      </div>
+    </div>
+
+    <div class="header-search">
+      <span class="search-icon">⌕</span>
+      <input
+        type="text"
+        id="search-input"
+        placeholder="SEARCH KNOWLEDGE INDEX…"
+        autocomplete="off"
+        spellcheck="false"
+        oninput="AP3X_App.runSearch(this.value)"
+        onfocus="document.getElementById('search-results').classList.remove('hidden')"
+        onblur="setTimeout(()=>document.getElementById('search-results').classList.add('hidden'),200)"
+      />
+      <div id="search-results" class="hidden"></div>
+    </div>
+
+    <div class="header-controls">
+      <div class="header-status">
+        <div class="status-dot"></div>
+        <span>ONLINE</span>
+      </div>
+      <button class="btn-reset" onclick="AP3X_App.confirmReset()" title="Reset database">RESET DB</button>
+    </div>
+  </header>
+
+  <!-- ── INSTALL BANNER (Android/Desktop) ───────────────── -->
+  <div id="install-banner" class="hidden">
+    <span class="install-text">▲ INSTALL AP3X INTELLIGENT AI — RUN FULLY OFFLINE</span>
+    <button class="btn-install" onclick="AP3X_App.triggerInstall()">INSTALL AP3X INTELLIGENT AI</button>
+  </div>
+
+  <!-- ── iOS INSTALL BANNER ─────────────────────────────── -->
+  <div id="ios-install-banner" class="hidden">
+    <span class="install-text">▲ Install AP3X — Tap Share then "Add to Home Screen"</span>
+    <button class="btn-install" onclick="AP3X_App.triggerInstall()">HOW TO INSTALL</button>
+  </div>
+
+  <!-- ── SIDEBAR NAV ────────────────────────────────────── -->
+  <nav id="nav">
+    <div class="nav-item active" data-view="dashboard">
+      <span class="nav-icon">◈</span>
+      <span class="nav-label">DASH</span>
+    </div>
+    <div class="nav-item" data-view="projects">
+      <span class="nav-icon">▦</span>
+      <span class="nav-label">PROJ</span>
+    </div>
+    <div class="nav-item" data-view="ingestion">
+      <span class="nav-icon">⊕</span>
+      <span class="nav-label">INGEST</span>
+    </div>
+    <div class="nav-item" data-view="analysis">
+      <span class="nav-icon">◎</span>
+      <span class="nav-label">ANALY</span>
+    </div>
+    <div class="nav-item" data-view="graph">
+      <span class="nav-icon">⬡</span>
+      <span class="nav-label">GRAPH</span>
+    </div>
+  </nav>
+
+  <!-- ── MAIN CONTENT ───────────────────────────────────── -->
+  <main id="main">
+
+    <!-- ════════════════════════════════════════════════
+         VIEW: DASHBOARD
+         ════════════════════════════════════════════════ -->
+    <section id="view-dashboard" class="view active">
+      <div class="view-header">
+        <span class="view-title">SYSTEM DASHBOARD</span>
+        <span class="view-sub">AP3X INTELLIGENCE STATUS</span>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-projects">0</div>
+          <div class="stat-label">PROJECTS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-nodes">0</div>
+          <div class="stat-label">GRAPH NODES</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-edges">0</div>
+          <div class="stat-label">RELATIONSHIPS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-ingestions">0</div>
+          <div class="stat-label">INGESTIONS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-entities">0</div>
+          <div class="stat-label">ENTITIES</div>
+        </div>
+      </div>
+
+      <!-- Health + Last Activity -->
+      <div class="dashboard-row">
+        <div class="panel">
+          <div class="panel-header">SYSTEM HEALTH</div>
+          <div class="panel-body">
+            <div id="system-health" class="health-badge health-initialising">
+              <span class="health-dot"></span>
+              <span class="health-status">INITIALISING</span>
+              <span class="health-label">No data indexed</span>
+            </div>
+            <div class="last-activity">LAST ACTIVITY: <span id="stat-last-activity">—</span></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">KNOWLEDGE DOMAINS</div>
+          <div class="panel-body">
+            <div id="domain-matrix" class="domain-matrix">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Projects -->
+      <div class="panel">
+        <div class="panel-header">
+          RECENT INTELLIGENCE
+          <button class="btn-secondary" onclick="AP3X_App.navigateTo('ingestion')" style="font-size:8px;padding:4px 10px;">+ INGEST</button>
+        </div>
+        <div class="panel-body" id="recent-projects">
+          <div class="empty-state">[ NO PROJECTS INDEXED — USE INGESTION ENGINE ]</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         VIEW: PROJECTS
+         ════════════════════════════════════════════════ -->
+    <section id="view-projects" class="view">
+      <div class="view-header">
+        <span class="view-title">PROJECT BROWSER</span>
+        <button class="btn-secondary" onclick="AP3X_App.navigateTo('ingestion')">+ INGEST NEW</button>
+      </div>
+      <div id="project-list" class="project-grid">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         VIEW: INGESTION
+         ════════════════════════════════════════════════ -->
+    <section id="view-ingestion" class="view">
+      <div class="view-header">
+        <span class="view-title">INGESTION ENGINE</span>
+        <span class="view-sub">RAW → STRUCTURED INTELLIGENCE</span>
+      </div>
+
+      <div class="ingestion-layout">
+
+        <!-- Input Panel -->
+        <div class="ingestion-panel">
+          <div class="ingestion-panel-header">RAW INTELLIGENCE INPUT</div>
+          <div class="ingestion-controls">
+            <div>
+              <div class="field-label">DOMAIN CLASSIFICATION</div>
+              <select id="ingestion-domain" class="domain-select">
+                <option value="auto">AUTO-DETECT</option>
+                <option value="ap3x">AP3X</option>
+                <option value="fleet">FLEET</option>
+                <option value="education">EDUCATION</option>
+                <option value="health">HEALTH</option>
+                <option value="general">GENERAL</option>
+              </select>
+            </div>
+
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+              <div class="field-label">RAW INPUT</div>
+              <textarea
+                id="ingestion-text"
+                class="raw-input"
+                placeholder="Paste any raw unstructured text here…
+
+EXAMPLES:
+· Fleet OS manages drivers, vehicles and AI route monitoring
+· AP3X Education Engine processes student learning patterns
+· Health tracking module monitors wellness metrics and alerts"
+                spellcheck="false"
+              ></textarea>
+            </div>
+
+            <button class="btn-process" onclick="AP3X_App.processIngestion()">
+              ◈ PROCESS INTELLIGENCE
+            </button>
+          </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="ingestion-panel">
+          <div class="ingestion-panel-header" style="color:var(--blue);">STRUCTURED OUTPUT</div>
+          <div id="ingestion-output" style="flex:1;overflow-y:auto;">
+            <div class="output-idle">[ AWAITING INPUT — PASTE RAW INTELLIGENCE BELOW ]</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         VIEW: ANALYSIS
+         ════════════════════════════════════════════════ -->
+    <section id="view-analysis" class="view">
+      <div class="view-header">
+        <span class="view-title">ANALYSIS VIEW</span>
+        <span class="view-sub">STRUCTURED INTELLIGENCE OUTPUT</span>
+      </div>
+
+      <div class="analysis-layout">
+
+        <!-- Controls -->
+        <div class="analysis-controls-panel">
+          <div>
+            <div class="field-label">SELECT SYSTEM</div>
+            <select id="analysis-select" class="analysis-select" onchange="AP3X_App.runAnalysis()">
+              <option value="">— SELECT SYSTEM —</option>
+            </select>
+          </div>
+
+          <div>
+            <div class="field-label">ANALYSIS MODE</div>
+            <div class="mode-selector">
+
+              <label class="mode-option">
+                <input type="radio" name="analysis-mode" value="simple" checked onchange="AP3X_App.runAnalysis()" />
+                <div class="mode-indicator"></div>
+                <div class="mode-info">
+                  <div class="mode-name">SIMPLE</div>
+                  <div class="mode-desc">Non-technical · Plain language</div>
+                </div>
+              </label>
+
+              <label class="mode-option">
+                <input type="radio" name="analysis-mode" value="technical" onchange="AP3X_App.runAnalysis()" />
+                <div class="mode-indicator"></div>
+                <div class="mode-info">
+                  <div class="mode-name">TECHNICAL</div>
+                  <div class="mode-desc">Architecture · Data flow · Modules</div>
+                </div>
+              </label>
+
+              <label class="mode-option">
+                <input type="radio" name="analysis-mode" value="investor" onchange="AP3X_App.runAnalysis()" />
+                <div class="mode-indicator"></div>
+                <div class="mode-info">
+                  <div class="mode-name">INVESTOR</div>
+                  <div class="mode-desc">Business value · Scalability · ROI</div>
+                </div>
+              </label>
+
+            </div>
+          </div>
+
+          <button class="btn-analyse" onclick="AP3X_App.runAnalysis()">
+            ◎ GENERATE ANALYSIS
+          </button>
+        </div>
+
+        <!-- Output -->
+        <div class="analysis-output-panel">
+          <div id="analysis-output">
+            <div class="analysis-output-idle">
+              [ SELECT A SYSTEM AND MODE TO GENERATE STRUCTURED ANALYSIS ]
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════
+         VIEW: KNOWLEDGE GRAPH
+         ════════════════════════════════════════════════ -->
+    <section id="view-graph" class="view">
+      <div class="view-header">
+        <span class="view-title">KNOWLEDGE GRAPH</span>
+        <span class="view-sub">AP3X ECOSYSTEM RELATIONSHIP MAP</span>
+      </div>
+
+      <div class="graph-layout">
+
+        <div class="graph-wrapper">
+          <canvas id="graph-canvas"></canvas>
+
+          <!-- Legend -->
+          <div class="graph-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#D4AF37"></div>
+              AP3X PROJECT
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#8A2BE2"></div>
+              ENTITY
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#4DA3FF"></div>
+              FLEET
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#00FF88"></div>
+              AP3X CORE
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="graph-controls">
+            <button class="graph-btn" onclick="GraphRenderer.resetView()">FIT</button>
+            <button class="graph-btn" onclick="AP3X_App.navigateTo('graph')">REFRESH</button>
+          </div>
+        </div>
+
+        <div class="graph-bottom">
+          <div id="graph-stats">
+            <span class="gstat">NODES: 0</span>
+            <span class="gstat">EDGES: 0</span>
+          </div>
+          <div id="graph-node-info">
+            <div style="color:var(--text-mute);font-size:9px;letter-spacing:1px;">[ CLICK NODE TO INSPECT ]</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main><!-- /#main -->
+
+</div><!-- /#app -->
+
+<!-- ════════════════════════════════════════════════════════
+     iOS INSTALL OVERLAY
+     ════════════════════════════════════════════════════════ -->
+<div id="ios-install-overlay" class="hidden">
+  <div class="ios-overlay-card">
+    <div class="ios-overlay-title">INSTALL AP3X</div>
+    <div class="ios-overlay-sub">RUN FULLY OFFLINE · ONE-TOUCH ACCESS</div>
+
+    <div class="ios-steps">
+      <div class="ios-step">
+        <div class="ios-step-num">1</div>
+        <div class="ios-step-text">Tap the <strong>Share</strong> button <strong>⎙</strong> at the bottom of your browser</div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">2</div>
+        <div class="ios-step-text">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">3</div>
+        <div class="ios-step-text">Tap <strong>"Add"</strong> — AP3X launches as a native app</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="AP3X_App.closeIOSOverlay()">GOT IT</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     SCRIPTS — load order matters
+     ════════════════════════════════════════════════════════ -->
+<script src="js/storage.js"></script>
+<script src="js/relationship-engine.js"></script>
+<script src="js/project-engine.js"></script>
+<script src="js/ingestion-engine.js"></script>
+<script src="js/knowledge-engine.js"></script>
+<script src="js/explanation-engine.js"></script>
+<script src="js/graph-renderer.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('[AP3X] Service Worker registered:', reg.scope))
+        .catch(err => console.warn('[AP3X] SW registration failed:', err));
+    });
+  }
+</script>
+
+</body>
+</html>
