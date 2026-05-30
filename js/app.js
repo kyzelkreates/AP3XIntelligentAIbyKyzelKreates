@@ -1,19 +1,31 @@
 // ============================================================
-// AP3X INTELLIGENT AI — MAIN APPLICATION CONTROLLER
+// AP3X INTELLIGENT AI — MAIN APPLICATION CONTROLLER v2.2
+// Wired: Storage · Ingestion · Knowledge · Relationship ·
+//        Explanation · Graph · InstallEngine · URLIntelligence
 // ============================================================
 
 (function () {
   'use strict';
 
-  let currentView   = 'dashboard';
-  let selectedItem  = null;
-  // ── PWA Install prompt — handled by InstallEngine ─────────
+  let currentView  = 'dashboard';
+  let selectedItem = null;
+
+  // ── Boot: handle ?view= shortcut URLs from manifest ───────
+  function _readUrlParam() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const view   = params.get('view');
+      if (view) return view;
+    } catch (e) { /* ignore */ }
+    return null;
+  }
 
   // ── Navigation ────────────────────────────────────────────
   function navigateTo(view) {
     currentView = view;
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
     const viewEl = document.getElementById(`view-${view}`);
     const navEl  = document.querySelector(`[data-view="${view}"]`);
     if (viewEl) viewEl.classList.add('active');
@@ -26,6 +38,7 @@
       case 'analysis':   renderAnalysis();   break;
       case 'graph':      renderGraph();      break;
       case 'url-intel':  renderURLIntel();   break;
+      default:           renderDashboard();  break;
     }
   }
 
@@ -34,22 +47,20 @@
     const overview = KnowledgeEngine.systemOverview();
     const health   = overview.statusHealth;
 
-    document.getElementById('stat-projects').textContent  = overview.totalProjects;
-    document.getElementById('stat-nodes').textContent     = overview.totalNodes;
-    document.getElementById('stat-edges').textContent     = overview.totalEdges;
-    document.getElementById('stat-ingestions').textContent= overview.totalIngestions;
-    document.getElementById('stat-entities').textContent  = overview.indexedEntities;
-    const urlJobsEl = document.getElementById('stat-url-jobs');
-    if (urlJobsEl) urlJobsEl.textContent = (AP3X_Storage.getDB().ingestion_jobs || []).length;
-
-    const lastEl = document.getElementById('stat-last-activity');
-    if (lastEl) lastEl.textContent = overview.lastActivity
+    _setText('stat-projects',   overview.totalProjects);
+    _setText('stat-nodes',      overview.totalNodes);
+    _setText('stat-edges',      overview.totalEdges);
+    _setText('stat-ingestions', overview.totalIngestions);
+    _setText('stat-entities',   overview.indexedEntities);
+    _setText('stat-url-jobs',   (AP3X_Storage.getDB().ingestion_jobs || []).length);
+    _setText('stat-last-activity', overview.lastActivity
       ? new Date(overview.lastActivity).toLocaleString()
-      : 'No activity yet';
+      : 'No activity yet');
 
+    // Health badge
     const healthEl = document.getElementById('system-health');
     if (healthEl) {
-      healthEl.className = `health-badge health-${health.status.toLowerCase()}`;
+      healthEl.className = `health-badge health-${(health.status || 'initialising').toLowerCase()}`;
       healthEl.innerHTML = `
         <span class="health-dot"></span>
         <span class="health-status">${health.status}</span>
@@ -63,7 +74,7 @@
         ap3x:'#D4AF37', fleet:'#4DA3FF', education:'#FFC832',
         health:'#FF5078', general:'#C0C0C0'
       };
-      matrixEl.innerHTML = Object.entries(overview.domainSummary).map(([d, info]) => {
+      matrixEl.innerHTML = Object.entries(overview.domainSummary || {}).map(([d, info]) => {
         const count = info.count !== undefined ? info.count : (info.notes || 0);
         const col   = domainColors[d] || '#C0C0C0';
         return `
@@ -81,7 +92,7 @@
     if (recentEl) {
       const projects = KnowledgeEngine.getAllProjects().slice(-4).reverse();
       if (projects.length === 0) {
-        recentEl.innerHTML = '<div class="empty-state">[ NO PROJECTS INDEXED — USE INGESTION ENGINE ]</div>';
+        recentEl.innerHTML = '<div class="empty-state">[ NO PROJECTS — USE INGESTION ENGINE ]</div>';
       } else {
         recentEl.innerHTML = projects.map(p => `
           <div class="recent-item" onclick="AP3X_App.openProject('${p.id}')">
@@ -93,6 +104,35 @@
             <div class="recent-arrow">›</div>
           </div>`).join('');
       }
+    }
+
+    // URL jobs summary
+    const urlJobsEl = document.getElementById('recent-url-jobs');
+    if (urlJobsEl && typeof URLIngestionEngine !== 'undefined') {
+      const jobs = URLIngestionEngine.getAllJobs().filter(j => j.status === 'compiled').slice(-3).reverse();
+      if (jobs.length > 0) {
+        urlJobsEl.innerHTML = jobs.map(j => {
+          let domain = j.url;
+          try { domain = new URL(j.url).hostname; } catch {}
+          return `
+            <div class="recent-item" onclick="AP3X_App.navigateTo('url-intel')">
+              <div class="recent-dot" style="background:#4DA3FF"></div>
+              <div class="recent-info">
+                <div class="recent-name">${domain}</div>
+                <div class="recent-meta">URL ANALYSIS · ${new Date(j.createdAt).toLocaleDateString()}</div>
+              </div>
+              <div class="recent-arrow">›</div>
+            </div>`;
+        }).join('');
+      }
+    }
+
+    // Show/hide install card based on standalone mode
+    const installCard = document.getElementById('dashboard-install-card');
+    if (installCard) {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                        || window.navigator.standalone === true;
+      installCard.style.display = isStandalone ? 'none' : '';
     }
   }
 
@@ -124,7 +164,7 @@
         <div class="project-tags">${(p.tags||[]).slice(0,5).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
         <div class="project-entities-row">${(p.entities||[]).slice(0,3).map(e=>`<span class="entity-chip">${typeof e==='string'?e:e.value}</span>`).join('')}</div>
         <div class="project-footer">
-          <span class="project-date">${new Date(p.createdAt).toLocaleDateString()}</span>
+          <span class="project-date">${new Date(p.createdAt||Date.now()).toLocaleDateString()}</span>
           <span class="project-action">INSPECT ›</span>
         </div>
       </div>`).join('');
@@ -135,12 +175,10 @@
     if (!project) return;
     selectedItem = project;
     navigateTo('analysis');
-    setTimeout(() => renderAnalysisForItem(project), 50);
   }
 
   // ── INGESTION ─────────────────────────────────────────────
   function renderIngestion() {
-    // Reset output
     const outputEl = document.getElementById('ingestion-output');
     if (outputEl) {
       outputEl.innerHTML = '<div class="output-idle">[ AWAITING INPUT — PASTE RAW INTELLIGENCE BELOW ]</div>';
@@ -154,7 +192,7 @@
     if (!textEl || !outputEl) return;
 
     const text   = textEl.value.trim();
-    const domain = domainEl?.value || null;
+    const domain = domainEl?.value || 'auto';
 
     if (!text) {
       outputEl.innerHTML = '<div class="output-error">[ ERROR: NO INPUT DETECTED ]</div>';
@@ -185,43 +223,34 @@
             <span class="output-status">[ ANALYSIS COMPLETE ]</span>
             <span class="output-domain">DOMAIN: ${result.domain.toUpperCase()}</span>
           </div>
-
           <div class="output-section">
             <div class="output-label">[ TYPE DETECTED ]</div>
             <div class="output-value type-badge">${result.type.toUpperCase()}</div>
           </div>
-
           <div class="output-section">
-            <div class="output-label">[ SUMMARY GENERATED ]</div>
+            <div class="output-label">[ SUMMARY ]</div>
             <div class="output-value">${result.summary}</div>
           </div>
-
           <div class="output-section">
-            <div class="output-label">[ ENTITIES EXTRACTED — ${result.entities.length} ]</div>
+            <div class="output-label">[ ENTITIES — ${result.entities.length} ]</div>
             <div class="entity-list">${entityHTML || '<span class="muted">None detected</span>'}</div>
           </div>
-
           <div class="output-section">
-            <div class="output-label">[ TAGS GENERATED — ${result.tags.length} ]</div>
+            <div class="output-label">[ TAGS — ${result.tags.length} ]</div>
             <div class="tag-cloud">${tagHTML}</div>
           </div>
-
           <div class="output-section">
-            <div class="output-label">[ KNOWLEDGE GRAPH UPDATED ]</div>
-            <div class="output-value graph-note">+ 1 record indexed · Relationships mapped · Storage written</div>
+            <div class="output-label">[ STORED ]</div>
+            <div class="output-value graph-note">1 record indexed · Relationships mapped · Graph updated</div>
           </div>
-
           <div class="output-actions">
             <button class="btn-secondary" onclick="AP3X_App.navigateTo('graph')">VIEW GRAPH</button>
             <button class="btn-secondary" onclick="AP3X_App.navigateTo('projects')">VIEW PROJECTS</button>
           </div>
         </div>`;
 
-      // Clear input
       textEl.value = '';
-
-      // Refresh dashboard stats silently
-    }, 600);
+    }, 300);
   }
 
   // ── ANALYSIS ──────────────────────────────────────────────
@@ -231,19 +260,22 @@
     if (selectEl) {
       selectEl.innerHTML = '<option value="">— SELECT SYSTEM —</option>' +
         projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-      if (selectedItem) selectEl.value = selectedItem.id;
+      if (selectedItem) {
+        selectEl.value = selectedItem.id;
+        renderAnalysisForItem(selectedItem);
+      }
     }
-    if (selectedItem) renderAnalysisForItem(selectedItem);
   }
 
   function renderAnalysisForItem(item) {
+    if (!item) return;
     const modeEl   = document.querySelector('input[name="analysis-mode"]:checked');
     const mode     = modeEl?.value || 'simple';
     const result   = ExplanationEngine.generateExplanation(item, mode);
     const outputEl = document.getElementById('analysis-output');
     if (!outputEl) return;
 
-    const rows = result.output.map(row => `
+    const rows = (result.output || []).map(row => `
       <div class="analysis-row">
         <div class="analysis-label">[ ${row.label} ]</div>
         <div class="analysis-value">${row.value}</div>
@@ -252,7 +284,7 @@
     outputEl.innerHTML = `
       <div class="analysis-header">
         <span class="analysis-status">[ ANALYSIS COMPLETE ]</span>
-        <span class="analysis-mode-badge mode-${result.mode.toLowerCase()}">${result.mode} MODE</span>
+        <span class="analysis-mode-badge mode-${(result.mode||'simple').toLowerCase()}">${result.mode} MODE</span>
       </div>
       <div class="analysis-title">${result.title}</div>
       <div class="analysis-rows">${rows}</div>`;
@@ -269,14 +301,12 @@
 
   // ── GRAPH ─────────────────────────────────────────────────
   function renderGraph() {
-    const graph = RelationshipEngine.getGraph();
+    const graph    = RelationshipEngine.getGraph();
     const canvasEl = document.getElementById('graph-canvas');
     if (!canvasEl) return;
 
     if (!canvasEl._ap3xInit) {
-      GraphRenderer.init(canvasEl, (node) => {
-        showGraphNodeInfo(node);
-      });
+      GraphRenderer.init(canvasEl, (node) => showGraphNodeInfo(node));
       canvasEl._ap3xInit = true;
     }
 
@@ -297,14 +327,23 @@
     if (!infoEl) return;
     infoEl.innerHTML = `
       <div class="node-info-header">[ NODE SELECTED ]</div>
-      <div class="node-info-row"><span>ID:</span> <span>${node.id}</span></div>
-      <div class="node-info-row"><span>LABEL:</span> <span>${node.label}</span></div>
-      <div class="node-info-row"><span>TYPE:</span> <span>${node.type.toUpperCase()}</span></div>
-      <div class="node-info-row"><span>DOMAIN:</span> <span>${node.domain.toUpperCase()}</span></div>
-      ${node.type === 'project' ? `<button class="btn-mini" onclick="AP3X_App.openProject('${node.id}')">ANALYSE ›</button>` : ''}`;
+      <div class="node-info-row"><span>ID:</span>     <span>${node.id}</span></div>
+      <div class="node-info-row"><span>LABEL:</span>  <span>${node.label}</span></div>
+      <div class="node-info-row"><span>TYPE:</span>   <span>${node.type.toUpperCase()}</span></div>
+      <div class="node-info-row"><span>DOMAIN:</span> <span>${(node.domain||'ap3x').toUpperCase()}</span></div>
+      ${node.type === 'project'
+        ? `<button class="btn-mini" onclick="AP3X_App.openProject('${node.id}')">ANALYSE ›</button>`
+        : ''}`;
   }
 
-  // ── Search ────────────────────────────────────────────────
+  // ── URL INTELLIGENCE ──────────────────────────────────────
+  function renderURLIntel() {
+    if (typeof URLIntelligenceView !== 'undefined') {
+      URLIntelligenceView.init();
+    }
+  }
+
+  // ── SEARCH ────────────────────────────────────────────────
   function runSearch(query) {
     if (!query || query.length < 2) return;
     const results = KnowledgeEngine.searchIndex(query);
@@ -315,14 +354,14 @@
     } else {
       el.innerHTML = results.slice(0,6).map(r => `
         <div class="search-result" onclick="AP3X_App.openProject('${r.id}')">
-          <span class="sr-name">${r.name || r.summary?.slice(0,40)}</span>
+          <span class="sr-name">${r.name || (r.summary||'').slice(0,40)}</span>
           <span class="sr-domain">${(r._source||'').toUpperCase()}</span>
         </div>`).join('');
     }
     el.classList.remove('hidden');
   }
 
-  // ── Install — delegated to InstallEngine ─────────────────
+  // ── INSTALL ───────────────────────────────────────────────
   function triggerInstall() {
     if (typeof InstallEngine !== 'undefined') {
       InstallEngine.triggerInstall();
@@ -330,57 +369,59 @@
   }
 
   function closeIOSOverlay() {
+    // Support both old overlay and new InstallEngine modal
+    document.getElementById('ios-install-overlay')?.classList.add('hidden');
     document.getElementById('ap3x-ios-guide')?.classList.add('hidden');
   }
 
-  // ── Reset DB ──────────────────────────────────────────────
+  // ── RESET DB ──────────────────────────────────────────────
   function confirmReset() {
-    if (confirm('RESET ALL DATA?\n\nThis will permanently delete all indexed intelligence.\nThis action cannot be undone.')) {
+    if (confirm('RESET ALL DATA?\n\nThis permanently deletes all indexed intelligence.\nCannot be undone.')) {
       AP3X_Storage.resetDB();
+      selectedItem = null;
       navigateTo('dashboard');
     }
   }
 
-  // ── URL INTELLIGENCE ─────────────────────────────────────
-  function renderURLIntel() {
-    if (typeof URLIntelligenceView !== 'undefined') {
-      URLIntelligenceView.init();
-    }
+  // ── UTILITY ───────────────────────────────────────────────
+  function _setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
   }
 
-  // ── Init ──────────────────────────────────────────────────
+  // ── INIT ──────────────────────────────────────────────────
   function init() {
-    // iOS install hint
-    if (isIOS() && !isInStandaloneMode()) {
-      setTimeout(() => {
-        document.getElementById('ios-install-banner')?.classList.remove('hidden');
-      }, 3000);
-    }
-
-    // Nav clicks
+    // Wire nav clicks
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', () => navigateTo(item.dataset.view));
     });
 
-    // Start on dashboard
-    navigateTo('dashboard');
+    // Check for ?view= param (manifest shortcuts)
+    const paramView = _readUrlParam();
+
+    // Start on requested view or dashboard
+    navigateTo(paramView || 'dashboard');
+
+    // Init install engine (also shows FAB / prompts)
+    if (typeof InstallEngine !== 'undefined') {
+      InstallEngine.init().catch(() => {});
+    }
   }
 
-  // Public interface
+  // ── PUBLIC API ────────────────────────────────────────────
   window.AP3X_App = {
     navigateTo,
-    renderURLIntel,
     openProject,
     processIngestion,
     runAnalysis,
+    renderAnalysisForItem,
     runSearch,
     triggerInstall,
     closeIOSOverlay,
-    confirmReset,
-    renderAnalysisForItem
+    confirmReset
   };
 
-  // Boot on DOM ready
+  // Boot
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
