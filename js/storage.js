@@ -26,6 +26,12 @@ const DEFAULT_DB = {
   commercial_models:      [],   // Module 4D: commercial & monetisation model
   maturity_scores:        [],   // Module 4E: system maturity scores (1-10)
   replication_blueprints: [],   // Module 4F: rebuild blueprint
+  // ── Cloner Module (Module 6) ─────────────────────────────
+  clone_dom_structures:    [],  // Stage 1: DOM extraction
+  clone_structural_models: [],  // Stage 2: structural interpretation
+  clone_system_designs:    [],  // Stage 3: system design
+  clone_prompts:           [],  // Stage 4: AI clone build prompt
+  clone_pwa_scaffolds:     [],  // Stage 5: deployable PWA files
 
   // ── Existing knowledge graph ─────────────────────────────
   knowledgeGraph: {
