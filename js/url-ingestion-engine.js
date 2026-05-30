@@ -139,6 +139,27 @@ const URLIngestionEngine = (() => {
       const replicationBlueprint = ProjectCompiler.compileReplicationBlueprint(snapshot, siteModel, jobId);
       AP3X_Storage.saveRecord('replication_blueprints', replicationBlueprint);
 
+      // ── MODULE 6: SITE → SYSTEM CLONER ─────────────────────
+      emit('[ CLONER ] Extracting DOM structure…');
+      const domStructure = ClonerEngine.extractDOMStructure(snapshot, jobId);
+      AP3X_Storage.saveRecord('clone_dom_structures', domStructure);
+
+      emit('[ CLONER ] Interpreting structural model…');
+      const structuralInterp = ClonerEngine.interpretStructure(domStructure, snapshot, siteModel, jobId);
+      AP3X_Storage.saveRecord('clone_structural_models', structuralInterp);
+
+      emit('[ CLONER ] Building system design…');
+      const systemDesign = ClonerEngine.buildSystemDesign(structuralInterp, snapshot, siteModel, blueprint, jobId);
+      AP3X_Storage.saveRecord('clone_system_designs', systemDesign);
+
+      emit('[ CLONER ] Generating clone build prompt…');
+      const clonePrompt = ClonerEngine.generateClonePrompt(systemDesign, structuralInterp, snapshot, siteModel, jobId);
+      AP3X_Storage.saveRecord('clone_prompts', clonePrompt);
+
+      emit('[ CLONER ] Compiling PWA scaffold…');
+      const pwaScaffold = ClonerEngine.generatePWAScaffold(systemDesign, structuralInterp, snapshot, siteModel, jobId);
+      AP3X_Storage.saveRecord('clone_pwa_scaffolds', pwaScaffold);
+
       emit('[ COMPILING ] Generating investor intelligence pack…');
       const investorPack = InvestorEngine.compile(snapshot, siteModel, projectSpec, jobId);
       AP3X_Storage.saveRecord('investor_packs', investorPack);
@@ -165,7 +186,12 @@ const URLIngestionEngine = (() => {
         commercialModel,
         maturityScores,
         replicationBlueprint,
-        investorPack
+        investorPack,
+        domStructure,
+        structuralInterp,
+        systemDesign,
+        clonePrompt,
+        pwaScaffold
       };
 
     } catch (err) {
@@ -196,6 +222,16 @@ const URLIngestionEngine = (() => {
     if (!mat)                          failures.push('No maturity scores');
     if (!rep)                          failures.push('No replication blueprint');
 
+    const dom  = AP3X_Storage.getRecord('clone_dom_structures',    jobId);
+    const sint = AP3X_Storage.getRecord('clone_structural_models', jobId);
+    const cpmt = AP3X_Storage.getRecord('clone_prompts',           jobId);
+    const pwa  = AP3X_Storage.getRecord('clone_pwa_scaffolds',     jobId);
+
+    if (!dom)  failures.push('No cloner DOM structure');
+    if (!sint) failures.push('No cloner structural model');
+    if (!cpmt) failures.push('No clone build prompt');
+    if (!pwa)  failures.push('No PWA scaffold');
+
     return { pass: failures.length === 0, failures };
   }
 
@@ -213,7 +249,12 @@ const URLIngestionEngine = (() => {
     db.investor_packs         = (db.investor_packs         || []).filter(r => r.jobId !== jobId);
     db.commercial_models      = (db.commercial_models      || []).filter(r => r.jobId !== jobId);
     db.maturity_scores        = (db.maturity_scores        || []).filter(r => r.jobId !== jobId);
-    db.replication_blueprints = (db.replication_blueprints || []).filter(r => r.jobId !== jobId);
+    db.replication_blueprints   = (db.replication_blueprints   || []).filter(r => r.jobId !== jobId);
+    db.clone_dom_structures     = (db.clone_dom_structures     || []).filter(r => r.jobId !== jobId);
+    db.clone_structural_models  = (db.clone_structural_models  || []).filter(r => r.jobId !== jobId);
+    db.clone_system_designs     = (db.clone_system_designs     || []).filter(r => r.jobId !== jobId);
+    db.clone_prompts            = (db.clone_prompts            || []).filter(r => r.jobId !== jobId);
+    db.clone_pwa_scaffolds      = (db.clone_pwa_scaffolds      || []).filter(r => r.jobId !== jobId);
     AP3X_Storage.saveDB(db);
     return true;
   }
