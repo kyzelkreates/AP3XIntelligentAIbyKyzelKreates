@@ -46,6 +46,7 @@
       case 'ingestion':  renderIngestion();  break;
       case 'analysis':   renderAnalysis();   break;
       case 'graph':      renderGraph();      break;
+      case 'url-intel':  renderURLIntel();   break;
     }
   }
 
@@ -59,6 +60,8 @@
     document.getElementById('stat-edges').textContent     = overview.totalEdges;
     document.getElementById('stat-ingestions').textContent= overview.totalIngestions;
     document.getElementById('stat-entities').textContent  = overview.indexedEntities;
+    const urlJobsEl = document.getElementById('stat-url-jobs');
+    if (urlJobsEl) urlJobsEl.textContent = (AP3X_Storage.getDB().ingestion_jobs || []).length;
 
     const lastEl = document.getElementById('stat-last-activity');
     if (lastEl) lastEl.textContent = overview.lastActivity
@@ -367,6 +370,13 @@
     }
   }
 
+  // ── URL INTELLIGENCE ─────────────────────────────────────
+  function renderURLIntel() {
+    if (typeof URLIntelligenceView !== 'undefined') {
+      URLIntelligenceView.init();
+    }
+  }
+
   // ── Init ──────────────────────────────────────────────────
   function init() {
     // iOS install hint
@@ -388,6 +398,7 @@
   // Public interface
   window.AP3X_App = {
     navigateTo,
+    renderURLIntel,
     openProject,
     processIngestion,
     runAnalysis,
