@@ -1,11 +1,12 @@
 // ============================================================
-// AP3X INTELLIGENT AI — STORAGE ENGINE
-// Single Source of Truth
+// AP3X INTELLIGENT AI — STORAGE ENGINE v2.0
+// Single Source of Truth — Extended for URL Intelligence System
 // ============================================================
 
 const STORAGE_KEY = 'AP3X_KNOWLEDGE_DB';
 
 const DEFAULT_DB = {
+  // ── Existing domains ────────────────────────────────────
   domains: {
     ap3x:      { projects: [] },
     fleet:     { notes: [], entities: [] },
@@ -13,31 +14,44 @@ const DEFAULT_DB = {
     health:    { notes: [], entities: [] },
     general:   { notes: [], entities: [] }
   },
+
+  // ── URL Intelligence System ──────────────────────────────
+  ingestion_jobs:    [],   // Module 1: job queue per URL
+  site_snapshots:    [],   // Module 2: raw crawl output
+  site_models:       [],   // Module 3: normalised structure
+  project_specs:     [],   // Module 4A: product specification
+  system_blueprints: [],   // Module 4B+C: architecture + DB model
+  ui_blueprints:     [],   // Module 4D+E: UI + logic flow
+  investor_packs:    [],   // Module 5: full investor intelligence
+
+  // ── Existing knowledge graph ─────────────────────────────
   knowledgeGraph: {
     nodes: [],
     edges: []
   },
+
   systemContext: {
-    productName:       'AP3X Intelligent AI',
-    creator:           'Kyzel Kreates',
-    baseArchitecture:  'AP3X Base Structure',
-    version:           '1.0',
-    mode:              'Local Intelligence OS'
+    productName:      'AP3X Intelligent AI',
+    creator:          'Kyzel Kreates',
+    baseArchitecture: 'AP3X Base Structure',
+    version:          '2.0',
+    mode:             'Local Intelligence OS + URL Analysis Engine'
   },
+
   meta: {
-    totalIngestions: 0,
-    lastActivity:    null,
-    indexedEntities: 0
+    totalIngestions:    0,
+    totalUrlJobs:       0,
+    lastActivity:       null,
+    indexedEntities:    0
   }
 };
 
+// ── Core accessors ───────────────────────────────────────────
 function getDB() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DB));
-    const parsed = JSON.parse(raw);
-    // Deep merge to ensure all keys exist
-    return deepMerge(JSON.parse(JSON.stringify(DEFAULT_DB)), parsed);
+    return deepMerge(JSON.parse(JSON.stringify(DEFAULT_DB)), JSON.parse(raw));
   } catch (e) {
     console.error('[STORAGE] Read error:', e);
     return JSON.parse(JSON.stringify(DEFAULT_DB));
@@ -56,15 +70,44 @@ function saveDB(db) {
 }
 
 function resetDB() {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-    return true;
-  } catch (e) {
-    console.error('[STORAGE] Reset error:', e);
-    return false;
-  }
+  try { localStorage.removeItem(STORAGE_KEY); return true; }
+  catch (e) { return false; }
 }
 
+// ── URL Intelligence SSOT helpers ───────────────────────────
+
+function getJob(jobId) {
+  const db = getDB();
+  return db.ingestion_jobs.find(j => j.id === jobId) || null;
+}
+
+function saveJob(job) {
+  const db = getDB();
+  const idx = db.ingestion_jobs.findIndex(j => j.id === job.id);
+  if (idx >= 0) db.ingestion_jobs[idx] = job;
+  else          db.ingestion_jobs.push(job);
+  saveDB(db);
+}
+
+function getAllJobs() {
+  return getDB().ingestion_jobs;
+}
+
+function saveRecord(collection, record) {
+  const db = getDB();
+  if (!Array.isArray(db[collection])) db[collection] = [];
+  const idx = db[collection].findIndex(r => r.jobId === record.jobId);
+  if (idx >= 0) db[collection][idx] = record;
+  else          db[collection].push(record);
+  saveDB(db);
+}
+
+function getRecord(collection, jobId) {
+  const db = getDB();
+  return (db[collection] || []).find(r => r.jobId === jobId) || null;
+}
+
+// ── Deep merge ────────────────────────────────────────────────
 function deepMerge(target, source) {
   for (const key of Object.keys(source)) {
     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
@@ -77,4 +120,8 @@ function deepMerge(target, source) {
   return target;
 }
 
-window.AP3X_Storage = { getDB, saveDB, resetDB };
+window.AP3X_Storage = {
+  getDB, saveDB, resetDB,
+  getJob, saveJob, getAllJobs,
+  saveRecord, getRecord
+};
