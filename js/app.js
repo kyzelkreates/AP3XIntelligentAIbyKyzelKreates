@@ -7,28 +7,7 @@
 
   let currentView   = 'dashboard';
   let selectedItem  = null;
-  let installPrompt = null;
-
-  // ── PWA Install prompt capture ────────────────────────────
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    installPrompt = e;
-    document.getElementById('install-banner')?.classList.remove('hidden');
-  });
-
-  window.addEventListener('appinstalled', () => {
-    document.getElementById('install-banner')?.classList.add('hidden');
-    installPrompt = null;
-  });
-
-  // ── Detect iOS ────────────────────────────────────────────
-  function isIOS() {
-    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-  }
-
-  function isInStandaloneMode() {
-    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  }
+  // ── PWA Install prompt — handled by InstallEngine ─────────
 
   // ── Navigation ────────────────────────────────────────────
   function navigateTo(view) {
@@ -343,23 +322,15 @@
     el.classList.remove('hidden');
   }
 
-  // ── Install ────────────────────────────────────────────────
+  // ── Install — delegated to InstallEngine ─────────────────
   function triggerInstall() {
-    if (installPrompt) {
-      installPrompt.prompt();
-      installPrompt.userChoice.then(choice => {
-        if (choice.outcome === 'accepted') {
-          document.getElementById('install-banner')?.classList.add('hidden');
-        }
-        installPrompt = null;
-      });
-    } else if (isIOS() && !isInStandaloneMode()) {
-      document.getElementById('ios-install-overlay')?.classList.remove('hidden');
+    if (typeof InstallEngine !== 'undefined') {
+      InstallEngine.triggerInstall();
     }
   }
 
   function closeIOSOverlay() {
-    document.getElementById('ios-install-overlay')?.classList.add('hidden');
+    document.getElementById('ap3x-ios-guide')?.classList.add('hidden');
   }
 
   // ── Reset DB ──────────────────────────────────────────────
