@@ -19,10 +19,13 @@ const DEFAULT_DB = {
   ingestion_jobs:    [],   // Module 1: job queue per URL
   site_snapshots:    [],   // Module 2: raw crawl output
   site_models:       [],   // Module 3: normalised structure
-  project_specs:     [],   // Module 4A: product specification
-  system_blueprints: [],   // Module 4B+C: architecture + DB model
-  ui_blueprints:     [],   // Module 4D+E: UI + logic flow
-  investor_packs:    [],   // Module 5: full investor intelligence
+  project_specs:          [],   // Module 4A: product specification
+  system_blueprints:      [],   // Module 4B+C: architecture + DB model
+  ui_blueprints:          [],   // Module 4D+E: UI + logic flow
+  investor_packs:         [],   // Module 5: full investor intelligence
+  commercial_models:      [],   // Module 4D: commercial & monetisation model
+  maturity_scores:        [],   // Module 4E: system maturity scores (1-10)
+  replication_blueprints: [],   // Module 4F: rebuild blueprint
 
   // ── Existing knowledge graph ─────────────────────────────
   knowledgeGraph: {
