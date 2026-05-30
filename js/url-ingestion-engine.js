@@ -127,6 +127,18 @@ const URLIngestionEngine = (() => {
       const uiBlueprint = ProjectCompiler.compileUI(snapshot, siteModel, jobId);
       AP3X_Storage.saveRecord('ui_blueprints', uiBlueprint);
 
+      emit('[ COMPILING ] Analysing commercial model…');
+      const commercialModel = ProjectCompiler.compileCommercialModel(snapshot, siteModel, jobId);
+      AP3X_Storage.saveRecord('commercial_models', commercialModel);
+
+      emit('[ COMPILING ] Scoring system maturity…');
+      const maturityScores = ProjectCompiler.compileMaturityScores(snapshot, siteModel, jobId);
+      AP3X_Storage.saveRecord('maturity_scores', maturityScores);
+
+      emit('[ COMPILING ] Generating replication blueprint…');
+      const replicationBlueprint = ProjectCompiler.compileReplicationBlueprint(snapshot, siteModel, jobId);
+      AP3X_Storage.saveRecord('replication_blueprints', replicationBlueprint);
+
       emit('[ COMPILING ] Generating investor intelligence pack…');
       const investorPack = InvestorEngine.compile(snapshot, siteModel, projectSpec, jobId);
       AP3X_Storage.saveRecord('investor_packs', investorPack);
@@ -150,6 +162,9 @@ const URLIngestionEngine = (() => {
         projectSpec,
         blueprint,
         uiBlueprint,
+        commercialModel,
+        maturityScores,
+        replicationBlueprint,
         investorPack
       };
 
@@ -163,17 +178,23 @@ const URLIngestionEngine = (() => {
   // ── Validation gates ──────────────────────────────────────
   function runValidationGates(jobId) {
     const failures = [];
-    const snap   = AP3X_Storage.getRecord('site_snapshots',    jobId);
-    const model  = AP3X_Storage.getRecord('site_models',       jobId);
-    const spec   = AP3X_Storage.getRecord('project_specs',     jobId);
-    const bp     = AP3X_Storage.getRecord('system_blueprints', jobId);
-    const inv    = AP3X_Storage.getRecord('investor_packs',    jobId);
+    const snap   = AP3X_Storage.getRecord('site_snapshots',       jobId);
+    const model  = AP3X_Storage.getRecord('site_models',          jobId);
+    const spec   = AP3X_Storage.getRecord('project_specs',        jobId);
+    const bp     = AP3X_Storage.getRecord('system_blueprints',    jobId);
+    const inv    = AP3X_Storage.getRecord('investor_packs',       jobId);
+    const com    = AP3X_Storage.getRecord('commercial_models',    jobId);
+    const mat    = AP3X_Storage.getRecord('maturity_scores',      jobId);
+    const rep    = AP3X_Storage.getRecord('replication_blueprints', jobId);
 
-    if (!snap)                                  failures.push('No site snapshot');
-    if (!model || !model.pages?.length)         failures.push('Site model empty or no pages');
-    if (!spec)                                  failures.push('No project spec');
-    if (!bp)                                    failures.push('No system blueprint');
-    if (!inv || !inv.executiveSummary)          failures.push('No investor pack');
+    if (!snap)                         failures.push('No site snapshot');
+    if (!model || !model.pages?.length)failures.push('Site model empty or no pages');
+    if (!spec)                         failures.push('No project spec');
+    if (!bp)                           failures.push('No system blueprint');
+    if (!inv || !inv.executiveSummary) failures.push('No investor pack');
+    if (!com)                          failures.push('No commercial model');
+    if (!mat)                          failures.push('No maturity scores');
+    if (!rep)                          failures.push('No replication blueprint');
 
     return { pass: failures.length === 0, failures };
   }
@@ -183,13 +204,16 @@ const URLIngestionEngine = (() => {
 
   function deleteJob(jobId) {
     const db = AP3X_Storage.getDB();
-    db.ingestion_jobs     = db.ingestion_jobs.filter(j => j.id !== jobId);
-    db.site_snapshots     = (db.site_snapshots     || []).filter(r => r.jobId !== jobId);
-    db.site_models        = (db.site_models        || []).filter(r => r.jobId !== jobId);
-    db.project_specs      = (db.project_specs      || []).filter(r => r.jobId !== jobId);
-    db.system_blueprints  = (db.system_blueprints  || []).filter(r => r.jobId !== jobId);
-    db.ui_blueprints      = (db.ui_blueprints      || []).filter(r => r.jobId !== jobId);
-    db.investor_packs     = (db.investor_packs     || []).filter(r => r.jobId !== jobId);
+    db.ingestion_jobs         = db.ingestion_jobs.filter(j => j.id !== jobId);
+    db.site_snapshots         = (db.site_snapshots         || []).filter(r => r.jobId !== jobId);
+    db.site_models            = (db.site_models            || []).filter(r => r.jobId !== jobId);
+    db.project_specs          = (db.project_specs          || []).filter(r => r.jobId !== jobId);
+    db.system_blueprints      = (db.system_blueprints      || []).filter(r => r.jobId !== jobId);
+    db.ui_blueprints          = (db.ui_blueprints          || []).filter(r => r.jobId !== jobId);
+    db.investor_packs         = (db.investor_packs         || []).filter(r => r.jobId !== jobId);
+    db.commercial_models      = (db.commercial_models      || []).filter(r => r.jobId !== jobId);
+    db.maturity_scores        = (db.maturity_scores        || []).filter(r => r.jobId !== jobId);
+    db.replication_blueprints = (db.replication_blueprints || []).filter(r => r.jobId !== jobId);
     AP3X_Storage.saveDB(db);
     return true;
   }
