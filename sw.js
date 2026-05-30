@@ -3,7 +3,7 @@
 // Offline-first caching strategy
 // ============================================================
 
-const CACHE_NAME    = 'ap3x-v1.0';
+const CACHE_NAME    = 'ap3x-v2.0';
 const OFFLINE_URL   = '/index.html';
 
 const PRECACHE_URLS = [
@@ -18,6 +18,11 @@ const PRECACHE_URLS = [
   '/js/knowledge-engine.js',
   '/js/explanation-engine.js',
   '/js/graph-renderer.js',
+  '/js/site-model-engine.js',
+  '/js/project-compiler.js',
+  '/js/investor-engine.js',
+  '/js/url-ingestion-engine.js',
+  '/js/url-intelligence-view.js',
   '/js/app.js',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
