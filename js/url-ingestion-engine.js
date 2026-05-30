@@ -80,9 +80,11 @@ const URLIngestionEngine = (() => {
 
       const crawlResp = await fetch(CRAWLER_ENDPOINT, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ url: job.url }),
-        credentials: 'include'
+        headers: {
+          'Content-Type':  'application/json',
+          'x-ap3x-token':  'AP3X-CRAWLER-PUBLIC-2025'
+        },
+        body: JSON.stringify({ url: job.url })
       });
 
       const crawlData = await crawlResp.json();
