@@ -1,6 +1,7 @@
 // ============================================================
-// AP3X — URL INTELLIGENCE VIEW CONTROLLER
-// Manages the URL Analysis screen UI
+// AP3X — URL INTELLIGENCE VIEW CONTROLLER v2.0
+// SYSTEM INTELLIGENCE REVERSE-ENGINEERING ENGINE
+// 10 analysis tabs — all 7 layers of intelligence
 // ============================================================
 
 const URLIntelligenceView = (() => {
@@ -14,30 +15,19 @@ const URLIntelligenceView = (() => {
     if (!el) return;
 
     if (jobs.length === 0) {
-      el.innerHTML = `
-        <div class="empty-state">
-          [ NO ANALYSIS JOBS — SUBMIT A URL ABOVE ]
-        </div>`;
+      el.innerHTML = '<div class="empty-state">[ NO ANALYSIS JOBS — SUBMIT A URL ABOVE ]</div>';
       return;
     }
 
     el.innerHTML = jobs.map(j => {
-      const statusClass = {
-        queued:     'status-queued',
-        crawling:   'status-crawling',
-        processing: 'status-processing',
-        compiled:   'status-compiled',
-        error:      'status-error'
-      }[j.status] || '';
-
+      const cls    = { queued:'status-queued', crawling:'status-crawling', processing:'status-processing', compiled:'status-compiled', error:'status-error' }[j.status] || '';
       const domain = (() => { try { return new URL(j.url).hostname; } catch { return j.url; } })();
-
       return `
         <div class="job-card ${j.id === activeJobId ? 'active' : ''}" onclick="URLIntelligenceView.loadJob('${j.id}')">
           <div class="job-card-header">
-            <span class="job-status-dot ${statusClass}"></span>
+            <span class="job-status-dot ${cls}"></span>
             <span class="job-domain">${domain}</span>
-            <span class="job-status-label ${statusClass}">${j.status.toUpperCase()}</span>
+            <span class="job-status-label ${cls}">${j.status.toUpperCase()}</span>
           </div>
           <div class="job-url">${j.url.slice(0,55)}${j.url.length>55?'…':''}</div>
           <div class="job-meta">
@@ -55,44 +45,31 @@ const URLIntelligenceView = (() => {
   // ── Submit URL ────────────────────────────────────────────
   async function submitUrl() {
     const inputEl = document.getElementById('url-input');
-    const logEl   = document.getElementById('url-log');
     const url     = inputEl?.value?.trim();
-
-    if (!url) {
-      showLog('[ERROR] No URL entered', 'error');
-      return;
-    }
+    if (!url) { showLog('[ERROR] No URL entered', 'error'); return; }
 
     clearLog();
     showLog(`[ INIT ] Creating ingestion job for: ${url}`, 'info');
 
     const result = URLIngestionEngine.createJob(url);
-    if (!result.success) {
-      showLog(`[ ERROR ] ${result.error}`, 'error');
-      return;
-    }
+    if (!result.success) { showLog(`[ ERROR ] ${result.error}`, 'error'); return; }
 
     activeJobId = result.job.id;
     renderJobList();
     showLog(`[ JOB CREATED ] ${result.job.id}`, 'info');
-
-    // Clear output panel
     clearOutputPanel();
     document.getElementById('url-output-placeholder')?.classList.remove('hidden');
 
-    // Execute job with live progress
     const execResult = await URLIngestionEngine.executeJob(result.job.id, (msg) => {
       showLog(msg, msg.includes('ERROR') || msg.includes('FAIL') ? 'error' : 'progress');
       renderJobList();
     });
 
     renderJobList();
-
     if (!execResult.success) {
       showLog(`\n[ ✗ PIPELINE FAILED ]\n${execResult.error}`, 'error');
       return;
     }
-
     showLog('\n[ ✓ COMPILATION COMPLETE — LOADING INTELLIGENCE PACK ]', 'success');
     inputEl.value = '';
     loadJob(result.job.id);
@@ -107,63 +84,67 @@ const URLIntelligenceView = (() => {
     if (!job) return;
     if (job.status !== 'compiled') {
       clearOutputPanel();
-      document.getElementById('url-output-placeholder').innerHTML =
-        `<div class="output-idle">[ JOB STATUS: ${job.status.toUpperCase()} ]<br>${job.progress?.message || ''}</div>`;
-      document.getElementById('url-output-placeholder').classList.remove('hidden');
+      const ph = document.getElementById('url-output-placeholder');
+      if (ph) { ph.innerHTML = `<div class="output-idle">[ JOB STATUS: ${job.status.toUpperCase()} ]<br>${job.progress?.message || ''}</div>`; ph.classList.remove('hidden'); }
       return;
     }
 
-    const spec    = AP3X_Storage.getRecord('project_specs',     jobId);
-    const bp      = AP3X_Storage.getRecord('system_blueprints', jobId);
-    const ui      = AP3X_Storage.getRecord('ui_blueprints',     jobId);
-    const inv     = AP3X_Storage.getRecord('investor_packs',    jobId);
-    const snap    = AP3X_Storage.getRecord('site_snapshots',    jobId);
-    const model   = AP3X_Storage.getRecord('site_models',       jobId);
+    const snap   = AP3X_Storage.getRecord('site_snapshots',       jobId);
+    const model  = AP3X_Storage.getRecord('site_models',          jobId);
+    const spec   = AP3X_Storage.getRecord('project_specs',        jobId);
+    const bp     = AP3X_Storage.getRecord('system_blueprints',    jobId);
+    const ui     = AP3X_Storage.getRecord('ui_blueprints',        jobId);
+    const inv    = AP3X_Storage.getRecord('investor_packs',       jobId);
+    const com    = AP3X_Storage.getRecord('commercial_models',    jobId);
+    const mat    = AP3X_Storage.getRecord('maturity_scores',      jobId);
+    const rep    = AP3X_Storage.getRecord('replication_blueprints', jobId);
 
-    if (!spec || !inv) {
-      showLog('[ERROR] Records missing from SSOT', 'error');
-      return;
-    }
-
-    renderOutputPanel(snap, model, spec, bp, ui, inv);
+    if (!spec || !inv) { showLog('[ERROR] Records missing from SSOT', 'error'); return; }
+    renderOutputPanel(snap, model, spec, bp, ui, inv, com, mat, rep);
   }
 
   // ── Output Panel ──────────────────────────────────────────
-  function renderOutputPanel(snap, model, spec, bp, ui, inv) {
-    const placeholder = document.getElementById('url-output-placeholder');
-    const panel       = document.getElementById('url-output-content');
-    if (placeholder) placeholder.classList.add('hidden');
+  function renderOutputPanel(snap, model, spec, bp, ui, inv, com, mat, rep) {
+    const ph    = document.getElementById('url-output-placeholder');
+    const panel = document.getElementById('url-output-content');
+    if (ph) ph.classList.add('hidden');
     if (!panel) return;
     panel.classList.remove('hidden');
 
+    const confScore = inv.inferenceScore?.score || 0;
+    const confClass = confScore >= 80 ? 'high' : confScore >= 50 ? 'med' : 'low';
+
     panel.innerHTML = `
-      <!-- Header -->
       <div class="intel-header">
         <div class="intel-title">${spec.productName}</div>
         <div class="intel-meta">
           <span class="intel-cat">${spec.category}</span>
           <span class="intel-url">${snap.url}</span>
-          <span class="intel-conf intel-conf-${inv.inferenceScore.score >= 80 ? 'high' : inv.inferenceScore.score >= 50 ? 'med' : 'low'}">${inv.inferenceScore.label}</span>
+          <span class="intel-conf intel-conf-${confClass}">${inv.inferenceScore?.label || 'Inferred'}</span>
         </div>
       </div>
 
-      <!-- Tab Nav -->
       <div class="intel-tabs">
         <button class="intel-tab active" onclick="URLIntelligenceView.showTab('summary',this)">SUMMARY</button>
-        <button class="intel-tab" onclick="URLIntelligenceView.showTab('product',this)">PRODUCT SPEC</button>
-        <button class="intel-tab" onclick="URLIntelligenceView.showTab('architecture',this)">ARCHITECTURE</button>
-        <button class="intel-tab" onclick="URLIntelligenceView.showTab('database',this)">DATABASE</button>
-        <button class="intel-tab" onclick="URLIntelligenceView.showTab('ui',this)">UI STRUCTURE</button>
-        <button class="intel-tab" onclick="URLIntelligenceView.showTab('investor',this)">INVESTOR PACK</button>
+        <button class="intel-tab" onclick="URLIntelligenceView.showTab('tech',this)">TECH STACK</button>
+        <button class="intel-tab" onclick="URLIntelligenceView.showTab('ai',this)">AI AGENTS</button>
+        <button class="intel-tab" onclick="URLIntelligenceView.showTab('dataflow',this)">DATA FLOW</button>
+        <button class="intel-tab" onclick="URLIntelligenceView.showTab('commercial',this)">COMMERCIAL</button>
+        <button class="intel-tab" onclick="URLIntelligenceView.showTab('maturity',this)">MATURITY</button>
+        <button class="intel-tab" onclick="URLIntelligenceView.showTab('blueprint',this)">BLUEPRINT</button>
+        <button class="intel-tab" onclick="URLIntelligenceView.showTab('product',this)">PRODUCT</button>
+        <button class="intel-tab" onclick="URLIntelligenceView.showTab('investor',this)">INVESTOR</button>
         <button class="intel-tab" onclick="URLIntelligenceView.showTab('status',this)">STATUS</button>
       </div>
 
-      <!-- Tab Content -->
-      <div id="tab-summary"    class="tab-content active">${renderSummaryTab(snap, model, spec, inv)}</div>
-      <div id="tab-product"    class="tab-content hidden">${renderProductTab(spec)}</div>
-      <div id="tab-architecture" class="tab-content hidden">${renderArchitectureTab(bp)}</div>
-      <div id="tab-database"   class="tab-content hidden">${renderDatabaseTab(bp)}</div>
-      <div id="tab-ui"         class="tab-content hidden">${renderUITab(ui)}</div>
+      <div id="tab-summary"    class="tab-content active">${renderSummaryTab(snap, model, spec, inv, mat)}</div>
+      <div id="tab-tech"       class="tab-content hidden">${renderTechStackTab(model, bp)}</div>
+      <div id="tab-ai"         class="tab-content hidden">${renderAIAgentTab(model)}</div>
+      <div id="tab-dataflow"   class="tab-content hidden">${renderDataFlowTab(model)}</div>
+      <div id="tab-commercial" class="tab-content hidden">${renderCommercialTab(com)}</div>
+      <div id="tab-maturity"   class="tab-content hidden">${renderMaturityTab(mat)}</div>
+      <div id="tab-blueprint"  class="tab-content hidden">${renderBlueprintTab(rep)}</div>
+      <div id="tab-product"    class="tab-content hidden">${renderProductTab(spec, ui)}</div>
       <div id="tab-investor"   class="tab-content hidden">${renderInvestorTab(inv)}</div>
       <div id="tab-status"     class="tab-content hidden">${renderStatusTab(snap, model)}</div>
     `;
@@ -176,251 +157,540 @@ const URLIntelligenceView = (() => {
     btn?.classList.add('active');
   }
 
-  // ── Tab: Summary ─────────────────────────────────────────
-  function renderSummaryTab(snap, model, spec, inv) {
-    const maturity = AP3X_Storage.getRecord('system_blueprints', activeJobId);
-    const mat = (() => {
-      // compute maturity from blueprint store
-      const db = AP3X_Storage.getDB();
-      return (db.investor_packs || []).find(r => r.jobId === activeJobId)?.productMaturity;
-    })();
+  // ════════════════════════════════════════════════════════════
+  // TAB: EXECUTIVE SUMMARY
+  // ════════════════════════════════════════════════════════════
+  function renderSummaryTab(snap, model, spec, inv, mat) {
+    const scores  = mat?.scores || {};
+    const overall = mat?.overall || { score: '?', label: 'Pending' };
+    const ai      = model?.aiAgentModel || {};
+    const tech    = model?.techStack || {};
+
+    return `
+      <div class="summary-hero">
+        <div class="sh-name">${spec.productName}</div>
+        <div class="sh-category">${spec.category}</div>
+        <div class="sh-desc">${spec.whatItDoes || ''}</div>
+      </div>
+
+      <div class="tab-grid-5">
+        ${Object.entries(scores).map(([key, s]) => `
+          <div class="tab-stat-card score-card score-${_scoreClass(s.score)}">
+            <div class="tsc-val">${s.score}<span class="tsc-denom">/10</span></div>
+            <div class="tsc-label">${_scoreKey(key)}</div>
+          </div>`).join('')}
+      </div>
+
+      ${_row('OVERALL MATURITY', `<span class="maturity-badge">${overall.label}</span> (${overall.score}/10)`)}
+      ${_row('PROBLEM SOLVED',   spec.problemItSolves)}
+      ${_row('TARGET USERS',     (spec.targetUsers||[]).join(' · '))}
+      ${_row('STACK SUMMARY',    tech.stackSummary || 'See Tech Stack tab')}
+      ${_row('AI SYSTEM',        ai.detected ? `<span class="ai-badge">${ai.systemType}</span> — ${ai.summary}` : 'No AI signals detected')}
+      ${_row('CORE FEATURES',    (spec.coreFeatures||[]).slice(0,6).map(f=>`<span class="feat-badge">${f.name}</span>`).join(' '))}
+      ${_row('60-SEC PITCH',     inv.investorPitch?.sixtySecondPitch || '')}
+
+      <div class="tab-section">
+        <div class="ts-label">[ CONFIDENCE DISCLAIMER ]</div>
+        <div class="ts-value muted">${inv.disclaimer || 'All values inferred from public page signals only.'}</div>
+      </div>`;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // TAB: LAYER 2 — TECHNICAL ARCHITECTURE
+  // ════════════════════════════════════════════════════════════
+  function renderTechStackTab(model, bp) {
+    const tech = model?.techStack || {};
+    const arch = bp?.architecture || {};
+    const flow = bp?.architectureFlow || '';
+
+    const _sigs = (arr) => (arr||[]).map(s => `<span class="sig-badge sig-${s.confidence}">${s.name} <span class="sig-conf">[${s.confidence}]</span></span>`).join(' ');
 
     return `
       <div class="tab-section">
-        <div class="ts-label">[ ANALYSIS COMPLETE ]</div>
-        <div class="ts-value large">${spec.productName}</div>
-        <div class="ts-value muted">${spec.tagline}</div>
+        <div class="ts-label">[ LAYER 2 — TECHNICAL ARCHITECTURE ANALYSIS ]</div>
+        <div class="ts-value muted">Every signal labelled: confirmed / likely / inferred</div>
+      </div>
+
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tc-label">FRONTEND</div>
+          <div class="tc-value">${_sigs(tech.frontend?.signals)}</div>
+          ${tech.frontend?.cssFramework ? `<div class="tc-sub">CSS: <span class="sig-badge sig-${tech.frontend.cssFramework.confidence}">${tech.frontend.cssFramework.name}</span></div>` : ''}
+          <div class="tc-flags">
+            ${tech.frontend?.ssr    ? '<span class="flag flag-on">SSR</span>' : '<span class="flag flag-off">SSR</span>'}
+            ${tech.frontend?.pwa    ? '<span class="flag flag-on">PWA</span>' : '<span class="flag flag-off">PWA</span>'}
+            ${tech.frontend?.mobile ? '<span class="flag flag-on">MOBILE</span>' : '<span class="flag flag-off">MOBILE</span>'}
+          </div>
+        </div>
+
+        <div class="tech-card">
+          <div class="tc-label">BACKEND</div>
+          <div class="tc-value">${_sigs(tech.backend?.signals)}</div>
+          <div class="tc-flags">
+            ${tech.backend?.cache    ? '<span class="flag flag-on">CACHE</span>' : '<span class="flag flag-off">CACHE</span>'}
+            ${tech.backend?.queue    ? '<span class="flag flag-on">QUEUE</span>' : '<span class="flag flag-off">QUEUE</span>'}
+            ${tech.backend?.realtime ? '<span class="flag flag-on">REALTIME</span>' : '<span class="flag flag-off">REALTIME</span>'}
+          </div>
+        </div>
+
+        <div class="tech-card">
+          <div class="tc-label">DATABASE</div>
+          <div class="tc-value">${_sigs(tech.database?.signals)}</div>
+        </div>
+
+        <div class="tech-card">
+          <div class="tc-label">AUTH</div>
+          <div class="tc-value">${_sigs(tech.auth?.signals)}</div>
+          <div class="tc-flags">
+            ${tech.auth?.oauth   ? '<span class="flag flag-on">OAUTH</span>' : ''}
+            ${tech.auth?.sso     ? '<span class="flag flag-on">SSO</span>' : ''}
+            ${tech.auth?.mfa     ? '<span class="flag flag-on">MFA</span>' : ''}
+            ${tech.auth?.passkey ? '<span class="flag flag-on">PASSKEY</span>' : ''}
+          </div>
+        </div>
+
+        <div class="tech-card">
+          <div class="tc-label">HOSTING / CDN</div>
+          <div class="tc-value">${_sigs(tech.hosting?.signals)}</div>
+          ${tech.hosting?.cdn ? '<div class="tc-sub"><span class="flag flag-on">CDN detected</span></div>' : ''}
+        </div>
+
+        <div class="tech-card">
+          <div class="tc-label">API</div>
+          <div class="tc-value">${_sigs(tech.api?.style)}</div>
+          <div class="tc-flags">
+            ${tech.api?.hasPublicApi ? '<span class="flag flag-on">PUBLIC API</span>' : '<span class="flag flag-off">PUBLIC API</span>'}
+            ${tech.api?.hasSDK       ? '<span class="flag flag-on">SDK</span>' : ''}
+          </div>
+        </div>
+
+        <div class="tech-card">
+          <div class="tc-label">STATE</div>
+          <div class="tc-value">${_sigs(tech.state?.signals)}</div>
+        </div>
+      </div>
+
+      ${flow ? `<div class="tab-section"><div class="ts-label">[ ARCHITECTURE FLOW ]</div><pre class="arch-diagram">${flow}</pre></div>` : ''}
+
+      <div class="tab-section">
+        <div class="ts-label">[ DATABASE SCHEMA — ${(bp?.databaseModel?.entities||[]).length} ENTITIES ]</div>
+        <div class="schema-grid">
+          ${(bp?.databaseModel?.entities||[]).map(e => `
+            <div class="schema-card">
+              <div class="schema-name">${e.name}</div>
+              <div class="schema-source">${e.source||'inferred'}</div>
+              ${(e.fields||[]).map(f => `<div class="schema-field">· ${f}</div>`).join('')}
+            </div>`).join('')}
+        </div>
+      </div>
+      ${_row('DB RELATIONSHIPS', (bp?.databaseModel?.relationships||[]).join('<br>') || 'None inferred')}
+    `;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // TAB: LAYER 3 — AI AGENT MODEL
+  // ════════════════════════════════════════════════════════════
+  function renderAIAgentTab(model) {
+    const ai = model?.aiAgentModel || {};
+
+    if (!ai.detected) {
+      return `
+        <div class="tab-section">
+          <div class="ts-label">[ LAYER 3 — AI & AGENT SYSTEM DETECTION ]</div>
+          <div class="ts-value muted">No AI or agent system signals detected on this page.</div>
+          <div class="ts-value muted">This may indicate a non-AI product, or AI signals are not publicly exposed.</div>
+        </div>`;
+    }
+
+    return `
+      <div class="tab-section">
+        <div class="ts-label">[ LAYER 3 — AI & AGENT SYSTEM DETECTION ]</div>
+        <div class="ts-value"><span class="ai-badge ai-badge-${ai.confidence}">${ai.systemType}</span></div>
+        <div class="ts-value muted">Confidence: ${ai.confidence}</div>
       </div>
 
       <div class="tab-grid-3">
         <div class="tab-stat-card">
-          <div class="tsc-val">${model.features?.length || 0}</div>
-          <div class="tsc-label">FEATURES</div>
+          <div class="tsc-val">${ai.agentCount || 0}</div>
+          <div class="tsc-label">AGENT ROLES</div>
         </div>
         <div class="tab-stat-card">
-          <div class="tsc-val">${model.pages?.length || 0}</div>
-          <div class="tsc-label">PAGES</div>
+          <div class="tsc-val">${(ai.llmProviders||[]).length}</div>
+          <div class="tsc-label">LLM PROVIDERS</div>
         </div>
         <div class="tab-stat-card">
-          <div class="tsc-val">${model.inferred_data_entities?.length || 0}</div>
-          <div class="tsc-label">DATA ENTITIES</div>
+          <div class="tsc-val">${(ai.triggerTypes||[]).length}</div>
+          <div class="tsc-label">TRIGGER TYPES</div>
         </div>
       </div>
 
-      ${_row('PRODUCT CATEGORY', spec.category)}
-      ${_row('WHAT IT DOES', spec.whatItDoes)}
-      ${_row('PROBLEM SOLVED', spec.problemItSolves)}
-      ${_row('TARGET USERS', (spec.targetUsers||[]).join(' · '))}
-      ${mat ? _row('MATURITY TIER', `<span class="maturity-badge maturity-${mat.tier.replace(/[\s+]/g,'-').toLowerCase()}">${mat.tier}</span>  COMPLEXITY: ${mat.complexity}`) : ''}
-      ${_row('CORE FEATURES', (spec.coreFeatures||[]).slice(0,6).map(f=>`<span class="feat-badge">${f.name}</span>`).join(' '))}
-      ${_row('60-SECOND PITCH', inv.investorPitch?.sixtySecondPitch || '')}
+      <div class="tab-section">
+        <div class="ts-label">[ AGENT ROLES ]</div>
+        ${(ai.agentRoles||[]).map(r => `
+          <div class="agent-role-row">
+            <span class="agent-role-name">${r.role}</span>
+            <span class="agent-role-type">${r.type}</span>
+            <span class="sig-conf">[${r.confidence}]</span>
+          </div>`).join('') || '<div class="muted ts-value">No specific agent roles detected</div>'}
+      </div>
+
+      ${_row('LLM PROVIDERS', (ai.llmProviders||[]).map(l=>`<span class="sig-badge sig-${l.confidence}">${l.name} [${l.confidence}]</span>`).join(' ') || 'Not detected')}
+      ${_row('TRIGGER TYPES', (ai.triggerTypes||[]).join(' · '))}
+
+      <div class="tab-section">
+        <div class="ts-label">[ AI CAPABILITIES ]</div>
+        <div class="capability-grid">
+          ${_capFlag('RAG / Vector Search',     ai.capabilities?.rag)}
+          ${_capFlag('Tool / Function Calling', ai.capabilities?.toolUse)}
+          ${_capFlag('Long-term Memory',        ai.capabilities?.memory)}
+          ${_capFlag('Streaming Responses',     ai.capabilities?.streaming)}
+          ${_capFlag('Fine-tuning Signals',     ai.capabilities?.fineTuning)}
+        </div>
+      </div>
+
+      ${ai.interactionFlow ? `<div class="tab-section"><div class="ts-label">[ INTERACTION FLOW DIAGRAM ]</div><pre class="arch-diagram">${ai.interactionFlow}</pre></div>` : ''}
     `;
   }
 
-  // ── Tab: Product Spec ─────────────────────────────────────
-  function renderProductTab(spec) {
+  // ════════════════════════════════════════════════════════════
+  // TAB: LAYER 4 — DATA FLOW MODEL
+  // ════════════════════════════════════════════════════════════
+  function renderDataFlowTab(model) {
+    const df = model?.dataFlowModel || {};
+
     return `
-      ${_row('PRODUCT NAME',     spec.productName)}
-      ${_row('CATEGORY',         spec.category)}
-      ${_row('WHAT IT DOES',     spec.whatItDoes)}
-      ${_row('PROBLEM IT SOLVES',spec.problemItSolves)}
-      ${_row('TARGET USERS',     (spec.targetUsers||[]).join(' · '))}
-      ${_row('CORE FEATURES',    (spec.coreFeatures||[]).map(f=>`<span class="feat-badge">${f.name} <span class="feat-type">${f.type}</span></span>`).join(' '))}
+      <div class="tab-section">
+        <div class="ts-label">[ LAYER 4 — DATA FLOW & INTELLIGENCE LOOP ]</div>
+      </div>
+
+      <div class="tab-section">
+        <div class="ts-label">[ DATA INPUTS ]</div>
+        ${(df.inputs||[]).map(i => `
+          <div class="flow-row">
+            <span class="flow-type">${i.type}</span>
+            <span class="flow-detail">${i.detail}</span>
+            <span class="sig-conf">[${i.confidence}]</span>
+          </div>`).join('') || '<div class="muted ts-value">None detected</div>'}
+      </div>
+
+      <div class="tab-section">
+        <div class="ts-label">[ PROCESSING LAYERS ]</div>
+        ${(df.processing||[]).map(p => `<div class="flow-row"><span class="flow-item">◈ ${p}</span></div>`).join('') || '<div class="muted ts-value">None detected</div>'}
+      </div>
+
+      <div class="tab-section">
+        <div class="ts-label">[ STORAGE BEHAVIOUR ]</div>
+        ${(df.storage||[]).map(s => `
+          <div class="flow-row">
+            <span class="flow-type">${s.type}</span>
+            <span class="flow-detail">${s.detail}</span>
+            <span class="sig-conf">[${s.confidence}]</span>
+          </div>`).join('') || '<div class="muted ts-value">None detected</div>'}
+      </div>
+
+      ${_row('REAL-TIME SYSTEM', df.isRealtime ? '<span class="flag flag-on">REAL-TIME DATA SYNC INFERRED</span>' : 'Static / request-response system (inferred)')}
+
+      <div class="tab-section">
+        <div class="ts-label">[ FEEDBACK LOOPS ]</div>
+        ${(df.feedbackLoops||[]).map(f => `
+          <div class="flow-row">
+            <span class="flow-type">↺ ${f.type}</span>
+            <span class="flow-detail">${f.detail}</span>
+            <span class="sig-conf">[${f.confidence}]</span>
+          </div>`).join('') || '<div class="muted ts-value">No feedback loop signals detected</div>'}
+      </div>
+
+      <div class="tab-section">
+        <div class="ts-label">[ TELEMETRY & ANALYTICS ]</div>
+        ${(df.telemetry||[]).map(t => `<span class="feat-badge">${t.name} [${t.confidence}]</span> `).join('') || '<div class="muted ts-value">No telemetry detected</div>'}
+      </div>
+
+      ${df.flowDiagram ? `<div class="tab-section"><div class="ts-label">[ DATA FLOW DIAGRAM ]</div><pre class="arch-diagram">${df.flowDiagram}</pre></div>` : ''}
+    `;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // TAB: LAYER 5 — COMMERCIAL MODEL
+  // ════════════════════════════════════════════════════════════
+  function renderCommercialTab(com) {
+    if (!com) return '<div class="output-idle">[ COMMERCIAL MODEL NOT AVAILABLE ]</div>';
+
+    return `
+      <div class="tab-section">
+        <div class="ts-label">[ LAYER 5 — COMMERCIAL & PRODUCT MODEL ]</div>
+      </div>
+
+      <div class="tab-section">
+        <div class="ts-label">[ BUSINESS MODELS DETECTED ]</div>
+        ${(com.models||[]).map(m => `
+          <div class="flow-row">
+            <span class="feat-badge">${m.model}</span>
+            <span class="sig-conf">[${m.confidence}]</span>
+          </div>`).join('')}
+      </div>
+
+      ${_row('REVENUE HYPOTHESIS', `<span class="inference-tag">${com.revenueHypothesis}</span>`)}
+
+      <div class="tab-section">
+        <div class="ts-label">[ MONETISATION SIGNALS ]</div>
+        <div class="capability-grid">
+          ${_capFlag('Pricing page',       com.monetisation?.hasPricingPage)}
+          ${_capFlag('Free trial',         com.monetisation?.freeTrial)}
+          ${_capFlag('Freemium tier',      com.monetisation?.freemium)}
+          ${_capFlag('Enterprise sales',   com.monetisation?.enterpriseSales)}
+          ${_capFlag('Self-serve signup',  com.monetisation?.selfServe)}
+          ${_capFlag('Annual discount',    com.monetisation?.annualDiscount)}
+        </div>
+      </div>
+
+      ${com.monetisation?.pricingSignals?.length ? _row('PRICING SIGNALS', com.monetisation.pricingSignals.join(' · ')) : ''}
+
+      <div class="tab-section">
+        <div class="ts-label">[ USER ACQUISITION STRATEGY ]</div>
+        ${(com.acquisition||[]).map(a => `
+          <div class="flow-row">
+            <span class="flow-type">${a.channel}</span>
+            <span class="sig-conf">[${a.confidence}]</span>
+          </div>`).join('') || '<div class="muted ts-value">Not detectable from public signals</div>'}
+      </div>
+
+      <div class="tab-section">
+        <div class="ts-label">[ SCALING APPROACH ]</div>
+        ${(com.scaling||[]).map(s => `<div class="flow-row"><span class="flow-item">◈ ${s}</span></div>`).join('') || '<div class="muted ts-value">Not directly observable</div>'}
+      </div>
+    `;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // TAB: LAYER 6 — MATURITY SCORES
+  // ════════════════════════════════════════════════════════════
+  function renderMaturityTab(mat) {
+    if (!mat) return '<div class="output-idle">[ MATURITY SCORES NOT AVAILABLE ]</div>';
+    const scores  = mat.scores || {};
+    const overall = mat.overall || {};
+
+    return `
+      <div class="tab-section">
+        <div class="ts-label">[ LAYER 6 — SYSTEM MATURITY SCORES ]</div>
+        <div class="ts-value muted">${mat.disclaimer || ''}</div>
+      </div>
+
+      <div class="maturity-overall">
+        <div class="mo-score">${overall.score}<span class="mo-denom">/10</span></div>
+        <div class="mo-label">${overall.label}</div>
+      </div>
+
+      <div class="maturity-bars">
+        ${Object.entries(scores).map(([key, s]) => `
+          <div class="maturity-row">
+            <div class="maturity-key">${_scoreKey(key)}</div>
+            <div class="maturity-bar-wrap">
+              <div class="maturity-bar-fill score-fill-${_scoreClass(s.score)}" style="width:${s.score*10}%"></div>
+            </div>
+            <div class="maturity-score-num">${s.score}/10</div>
+            <div class="maturity-label-text">${s.label}</div>
+          </div>
+          <div class="maturity-note">${s.note}</div>`).join('')}
+      </div>
+    `;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // TAB: LAYER 7 — REPLICATION BLUEPRINT
+  // ════════════════════════════════════════════════════════════
+  function renderBlueprintTab(rep) {
+    if (!rep) return '<div class="output-idle">[ REPLICATION BLUEPRINT NOT AVAILABLE ]</div>';
+
+    return `
+      <div class="tab-section">
+        <div class="ts-label">[ LAYER 7 — REPLICATION BLUEPRINT ]</div>
+        <div class="ts-value pitch-text">${rep.howToRebuild || ''}</div>
+      </div>
+
+      <div class="tab-section">
+        <div class="ts-label">[ RECOMMENDED STACK ]</div>
+        <div class="stack-grid">
+          ${Object.entries(rep.recommendedStack || {}).filter(([,v])=>v&&v!=='N/A').map(([k,v]) => `
+            <div class="stack-card">
+              <div class="sc-layer">${k.toUpperCase()}</div>
+              <div class="sc-value">${v}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      ${rep.architectureOverview ? `<div class="tab-section"><div class="ts-label">[ ARCHITECTURE OVERVIEW ]</div><pre class="arch-diagram">${rep.architectureOverview}</pre></div>` : ''}
+
+      <div class="tab-section">
+        <div class="ts-label">[ REQUIRED COMPONENTS ]</div>
+        <div class="component-list">
+          ${(rep.components||[]).map(c => `
+            <div class="component-row priority-${c.priority}">
+              <span class="comp-layer">${c.layer}</span>
+              <span class="comp-name">${c.component}</span>
+              <span class="comp-priority priority-badge-${c.priority}">${c.priority.toUpperCase()}</span>
+              <span class="comp-notes">${c.notes}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="tab-section">
+        <div class="ts-label">[ MVP BUILD PHASES ]</div>
+        ${['phase1','phase2','phase3'].map(ph => {
+          const p = rep.mvpStructure?.[ph];
+          if (!p) return '';
+          return `
+            <div class="phase-block">
+              <div class="phase-name">${ph.toUpperCase()}: ${p.name}</div>
+              ${(p.items||[]).map(i => `<div class="phase-item">▸ ${i}</div>`).join('')}
+            </div>`;
+        }).join('')}
+      </div>
+
+      ${rep.effort ? `
+        <div class="tab-section">
+          <div class="ts-label">[ EFFORT ESTIMATE ]</div>
+          ${_row('SOLO DEVELOPER', rep.effort.solo)}
+          ${_row('3-PERSON TEAM',  rep.effort.team)}
+          ${_row('COMPLEXITY',     rep.effort.complexity)}
+          <div class="ts-value muted">${rep.effort.notes}</div>
+        </div>` : ''}
+
+      <div class="tab-section investor-disclaimer">⚠ ${rep.disclaimer || ''}</div>
+    `;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // TAB: PRODUCT SPEC (preserved from v1)
+  // ════════════════════════════════════════════════════════════
+  function renderProductTab(spec, ui) {
+    const u = ui?.uiStructure || {};
+    const l = ui?.logicFlow || {};
+    return `
+      ${_row('PRODUCT NAME',      spec.productName)}
+      ${_row('CATEGORY',          spec.category)}
+      ${_row('WHAT IT DOES',      spec.whatItDoes)}
+      ${_row('PROBLEM IT SOLVES', spec.problemItSolves)}
+      ${_row('TARGET USERS',      (spec.targetUsers||[]).join(' · '))}
+      ${_row('CORE FEATURES',     (spec.coreFeatures||[]).map(f=>`<span class="feat-badge">${f.name} <span class="feat-type">${f.type}</span></span>`).join(' '))}
       <div class="tab-section">
         <div class="ts-label">[ USER JOURNEYS ]</div>
         ${(spec.userJourneys||[]).map(j => `
           <div class="journey-row">
             <div class="journey-name">${j.name}</div>
-            <div class="journey-steps">${j.steps.map((s,i) => `<span class="step">${i===0?'':' → '}${s}</span>`).join('')}</div>
-          </div>`).join('') || '<div class="muted ts-value">No user journeys inferred</div>'}
-      </div>`;
-  }
-
-  // ── Tab: Architecture ─────────────────────────────────────
-  function renderArchitectureTab(bp) {
-    if (!bp) return '<div class="output-idle">[ NO BLUEPRINT ]</div>';
-    const a = bp.architecture;
-    return `
-      <div class="tab-section">
-        <div class="ts-label">[ SYSTEM ARCHITECTURE BLUEPRINT ]</div>
+            <div class="journey-steps">${j.steps.map((s,i)=>`<span class="step">${i===0?'':' → '}${s}</span>`).join('')}</div>
+          </div>`).join('') || '<div class="muted ts-value">None inferred</div>'}
       </div>
-      ${_row('FRONTEND STACK',   a.frontend.stackSignals.join(', '))}
-      ${_row('PAGES DETECTED',   a.frontend.pages.join(' · '))}
-      ${_row('PWA SIGNALS',      a.frontend.pwaSignals ? 'PWA signals detected' : 'No PWA signals')}
-      ${_row('MOBILE SIGNALS',   a.frontend.mobileSignals ? 'Mobile support inferred' : 'None detected')}
-      ${_row('BACKEND TYPE',     a.backend.type)}
-      ${_row('CLOUD SIGNALS',    a.backend.cloudSignals.join(', ') || 'None detected')}
-      ${_row('SERVER PROTOCOLS', a.backend.serverSignals.join(', ') || 'None detected')}
-      ${_row('CACHE SIGNALS',    a.backend.cacheSignals.join(', ') || 'None')}
-      ${_row('ASYNC/QUEUE',      a.backend.queueSignals.join(', ') || 'None')}
-      ${_row('AUTH TYPE',        a.auth.type)}
-      ${_row('OAUTH',            a.auth.oauth ? 'OAuth detected' : 'Not detected')}
-      ${_row('SSO / SAML',       a.auth.sso  ? 'SSO/SAML signals' : 'Not detected')}
-      ${_row('MFA',              a.auth.mfa  ? '2FA/MFA detected' : 'Not detected')}
-      ${_row('STATE MANAGEMENT', a.state.type)}
-      ${_row('API STYLE',        a.api.style.join(', '))}
-      ${_row('PUBLIC API',       a.api.publicApi ? 'API layer inferred' : 'No public API signals')}
-      ${_row('WEBHOOKS',         a.api.webhooks ? 'Webhook support inferred' : 'Not detected')}
+      ${_row('NAVIGATION',    (u.navigation||[]).join(' · '))}
+      ${_row('COMPONENTS',    (u.componentTree||[]).map(c=>`<span class="comp-badge">${c.name}</span>`).join(' '))}
+      <div class="tab-section">
+        <div class="ts-label">[ PAGES — ${(u.pages||[]).length} ]</div>
+        <div class="page-grid">${(u.pages||[]).map(p=>`<div class="page-chip">${p.label}</div>`).join('')}</div>
+      </div>
+      ${_row('STATE TRANSITIONS',  (l.stateTransitions||[]).slice(0,8).map(t=>`<div class="transition-row">→ ${t}</div>`).join('') || 'None inferred')}
+      ${_row('SYSTEM BEHAVIOURS',  (l.systemBehaviours||[]).join('<br>') || 'None detected')}
     `;
   }
 
-  // ── Tab: Database ─────────────────────────────────────────
-  function renderDatabaseTab(bp) {
-    if (!bp) return '<div class="output-idle">[ NO DATABASE MODEL ]</div>';
-    const db = bp.databaseModel;
-    return `
-      <div class="tab-section">
-        <div class="ts-label">[ DATABASE MODEL ]</div>
-      </div>
-      ${_row('DATABASE TYPE', db.type)}
-      ${_row('RELATIONSHIPS', db.relationships.join('<br>') || 'None inferred')}
-      <div class="tab-section">
-        <div class="ts-label">[ SCHEMA — ${db.entities.length} ENTITIES ]</div>
-        <div class="schema-grid">
-          ${(db.entities||[]).map(e => `
-            <div class="schema-card">
-              <div class="schema-name">${e.name}</div>
-              <div class="schema-source">${e.source||'core'}</div>
-              ${(e.fields||[]).map(f => `<div class="schema-field">· ${f}</div>`).join('')}
-            </div>`).join('')}
-        </div>
-      </div>`;
-  }
-
-  // ── Tab: UI Structure ─────────────────────────────────────
-  function renderUITab(ui) {
-    if (!ui) return '<div class="output-idle">[ NO UI BLUEPRINT ]</div>';
-    const u = ui.uiStructure;
-    const l = ui.logicFlow;
-    return `
-      ${_row('NAVIGATION ITEMS', (u.navigation||[]).join(' · ') || 'None extracted')}
-      ${_row('DASHBOARD LAYOUT', typeof u.dashboardLayout === 'object'
-        ? `${u.dashboardLayout.layout} — Panels: ${u.dashboardLayout.panels?.join(', ')}`
-        : u.dashboardLayout)}
-      ${_row('COMPONENT TREE', (u.componentTree||[]).map(c=>`<span class="comp-badge">${c.name}</span>`).join(' '))}
-      <div class="tab-section">
-        <div class="ts-label">[ PAGES — ${(u.pages||[]).length} DETECTED ]</div>
-        <div class="page-grid">
-          ${(u.pages||[]).map(p => `<div class="page-chip">${p.label}</div>`).join('')}
-        </div>
-      </div>
-      <div class="tab-section">
-        <div class="ts-label">[ STATE TRANSITIONS ]</div>
-        ${(l.stateTransitions||[]).slice(0,12).map(t=>`<div class="transition-row">→ ${t}</div>`).join('') || '<div class="muted ts-value">None inferred</div>'}
-      </div>
-      ${_row('FEATURE INTERACTIONS', (l.featureInteractions||[]).join('<br>') || 'None detected')}
-      ${_row('SYSTEM BEHAVIOURS', (l.systemBehaviours||[]).join('<br>') || 'None detected')}
-    `;
-  }
-
-  // ── Tab: Investor Pack ────────────────────────────────────
+  // ════════════════════════════════════════════════════════════
+  // TAB: INVESTOR PACK (preserved from v1)
+  // ════════════════════════════════════════════════════════════
   function renderInvestorTab(inv) {
-    const m = inv.productMaturity;
-    const b = inv.businessModel;
-    const s = inv.scalabilitySignals;
-    const p = inv.investorPitch;
-    const mkt = inv.marketSignals;
+    const m   = inv.productMaturity || {};
+    const b   = inv.businessModel || {};
+    const s   = inv.scalabilitySignals || {};
+    const p   = inv.investorPitch || {};
+    const mkt = inv.marketSignals || {};
 
     return `
       <div class="tab-section investor-disclaimer">⚠ ${inv.disclaimer}</div>
-
       <div class="tab-section">
         <div class="ts-label">[ EXECUTIVE SUMMARY ]</div>
         <div class="ts-value pitch-text">${inv.executiveSummary?.oneLiner || ''}</div>
       </div>
-      ${_row('VALUE PROPOSITION', inv.executiveSummary?.valueProposition)}
-      ${_row('WHAT MAKES IT VALUABLE', inv.executiveSummary?.whatMakesItValuable)}
-
+      ${_row('VALUE PROPOSITION',     inv.executiveSummary?.valueProposition)}
+      ${_row('WHAT MAKES IT VALUABLE',inv.executiveSummary?.whatMakesItValuable)}
+      ${_row('PROBLEM',               inv.problemSolution?.problem)}
+      ${_row('SOLUTION',              inv.problemSolution?.solution)}
+      ${_row('DIFFERENTIATORS',       (inv.problemSolution?.keyDifferentiators||[]).join('<br>'))}
+      ${_row('MATURITY TIER',         `<span class="maturity-badge maturity-${(m.tier||'').replace(/[\s+]/g,'-').toLowerCase()}">${m.tier}</span>`)}
+      ${_row('COMPLETE',              (m.complete||[]).join(' · '))}
+      ${_row('MISSING',               (m.missing||[]).join(' · '))}
+      ${_row('MARKET POSITIONING',    mkt.positioning)}
+      ${_row('BUYER SEGMENT',         mkt.buyerSegment)}
+      ${_row('LIKELY COMPETITORS',    mkt.likelyCompetitorCategory)}
+      ${_row('ADOPTION SIGNALS',      (mkt.adoptionSignals||[]).join(' · '))}
+      ${_row('BUSINESS MODELS',       (b.models||[]).join(' · '))}
+      ${_row('PRICING SIGNALS',       (b.pricingSignals||[]).join(' · ') || 'None detected')}
+      ${_row('REVENUE HYPOTHESIS',    `<span class="inference-tag">${b.revenueHypothesis||''}</span>`)}
+      ${_row('MVP EVIDENCE',          (s.mvpEvidence||[]).join('<br>'))}
+      ${_row('SCALABILITY',           (s.scalabilityIndicators||[]).join('<br>'))}
       <div class="tab-section">
-        <div class="ts-label">[ PROBLEM & SOLUTION ]</div>
+        <div class="ts-label">[ 60-SECOND PITCH ]</div>
+        <div class="pitch-block">${p.sixtySecondPitch || ''}</div>
       </div>
-      ${_row('PROBLEM',    inv.problemSolution?.problem)}
-      ${_row('SOLUTION',   inv.problemSolution?.solution)}
-      ${_row('DIFFERENTIATORS', (inv.problemSolution?.keyDifferentiators||[]).join('<br>'))}
-
-      <div class="tab-section">
-        <div class="ts-label">[ PRODUCT MATURITY ]</div>
-      </div>
-      ${_row('MATURITY TIER',     `<span class="maturity-badge maturity-${(m.tier||'').replace(/[\s+]/g,'-').toLowerCase()}">${m.tier}</span>`)}
-      ${_row('COMPLEXITY SCORE',  `${m.complexityScore}/13 — ${m.complexity}`)}
-      ${_row('COMPLETE',          (m.complete||[]).join(' · '))}
-      ${_row('MISSING',           (m.missing||[]).join(' · '))}
-
-      <div class="tab-section">
-        <div class="ts-label">[ MARKET SIGNALS ]</div>
-      </div>
-      ${_row('CATEGORY',            mkt.productCategory)}
-      ${_row('MARKET POSITIONING',  mkt.positioning)}
-      ${_row('BUYER SEGMENT',       mkt.buyerSegment)}
-      ${_row('LIKELY COMPETITORS',  mkt.likelyCompetitorCategory)}
-      ${_row('ADOPTION SIGNALS',    (mkt.adoptionSignals||[]).join(' · '))}
-
-      <div class="tab-section">
-        <div class="ts-label">[ BUSINESS MODEL — INFERRED ]</div>
-      </div>
-      ${_row('MODELS DETECTED',    (b.models||[]).join(' · '))}
-      ${_row('PRICING SIGNALS',    (b.pricingSignals||[]).join(' · ') || 'None detected')}
-      ${_row('HAS PRICING PAGE',   b.hasPricingPage ? 'Yes' : 'Not detected')}
-      ${_row('REVENUE HYPOTHESIS', `<span class="inference-tag">${b.revenueHypothesis}</span>`)}
-
-      <div class="tab-section">
-        <div class="ts-label">[ SCALABILITY SIGNALS ]</div>
-      </div>
-      ${_row('MVP EVIDENCE',           (s.mvpEvidence||[]).join('<br>'))}
-      ${_row('SCALABILITY INDICATORS', (s.scalabilityIndicators||[]).join('<br>'))}
-      ${_row('ENGINEERING MATURITY',   s.engineeringMaturity)}
-
-      <div class="tab-section">
-        <div class="ts-label">[ INVESTOR PITCH ]</div>
-      </div>
-      <div class="tab-section">
-        <div class="pitch-block">${p?.sixtySecondPitch || ''}</div>
-      </div>
-      ${_row('WHY IT MATTERS',     p?.whyItMatters)}
-      ${_row('WHY IT COULD SCALE', p?.whyItCouldScale)}
-
-      ${_row('INFERENCE CONFIDENCE', `<span class="confidence-${inv.inferenceScore.score>=80?'high':inv.inferenceScore.score>=50?'med':'low'}">${inv.inferenceScore.label} (${inv.inferenceScore.score}/100)</span>`)}
+      ${_row('WHY IT MATTERS',     p.whyItMatters)}
+      ${_row('WHY IT COULD SCALE', p.whyItCouldScale)}
+      ${_row('CONFIDENCE',         `<span class="confidence-${inv.inferenceScore?.score>=80?'high':inv.inferenceScore?.score>=50?'med':'low'}">${inv.inferenceScore?.label} (${inv.inferenceScore?.score}/100)</span>`)}
     `;
   }
 
-  // ── Tab: Ingestion Status ─────────────────────────────────
+  // ════════════════════════════════════════════════════════════
+  // TAB: INGESTION STATUS
+  // ════════════════════════════════════════════════════════════
   function renderStatusTab(snap, model) {
-    const job  = activeJobId ? URLIngestionEngine.getJobById(activeJobId) : null;
+    const job   = activeJobId ? URLIngestionEngine.getJobById(activeJobId) : null;
     const gates = activeJobId ? URLIngestionEngine.runValidationGates(activeJobId) : null;
-
     return `
-      <div class="tab-section">
-        <div class="ts-label">[ INGESTION STATUS ]</div>
-      </div>
-      ${_row('JOB ID',         job?.id || '—')}
-      ${_row('URL',            snap?.url || '—')}
-      ${_row('STATUS',         `<span class="status-pill status-compiled">COMPILED</span>`)}
-      ${_row('CRAWLED AT',     snap?.crawledAt ? new Date(snap.crawledAt).toLocaleString() : '—')}
-      ${_row('HTTP STATUS',    snap?.httpStatus || '—')}
-      ${_row('HTML SIZE',      snap?.htmlLength ? `${(snap.htmlLength/1024).toFixed(1)} KB` : '—')}
-      ${_row('TEXT EXTRACTED', snap?.textLength ? `${snap.textLength} chars` : '—')}
-      ${_row('LINKS FOUND',    snap?.links?.length || 0)}
-      ${_row('FORMS FOUND',    snap?.forms?.length || 0)}
-      ${_row('PRICING SIGNALS',snap?.pricingSignals?.length || 0)}
-      ${_row('API SIGNALS',    snap?.apiSignals?.length || 0)}
-      ${_row('MODEL VERSION',  model?.version || 1)}
+      ${_row('JOB ID',          job?.id || '—')}
+      ${_row('URL',             snap?.url || '—')}
+      ${_row('STATUS',          '<span class="status-pill status-compiled">COMPILED</span>')}
+      ${_row('CRAWLED AT',      snap?.crawledAt ? new Date(snap.crawledAt).toLocaleString() : '—')}
+      ${_row('HTTP STATUS',     snap?.httpStatus || '—')}
+      ${_row('HTML SIZE',       snap?.htmlLength ? `${(snap.htmlLength/1024).toFixed(1)} KB` : '—')}
+      ${_row('TEXT EXTRACTED',  snap?.textLength ? `${snap.textLength} chars` : '—')}
+      ${_row('LINKS FOUND',     snap?.links?.length || 0)}
+      ${_row('FORMS FOUND',     snap?.forms?.length || 0)}
+      ${_row('PRICING SIGNALS', snap?.pricingSignals?.length || 0)}
+      ${_row('API SIGNALS',     snap?.apiSignals?.length || 0)}
+      ${_row('SITE MODEL V',    model?.version || 1)}
+      ${_row('AI DETECTED',     model?.aiAgentModel?.detected ? `Yes — ${model.aiAgentModel.systemType}` : 'No')}
       <div class="tab-section">
         <div class="ts-label">[ VALIDATION GATES ]</div>
         ${gates?.pass
           ? '<div class="gate-pass">✓ ALL VALIDATION GATES PASSED</div>'
           : (gates?.failures||[]).map(f=>`<div class="gate-fail">✗ ${f}</div>`).join('')}
-      </div>
-    `;
+      </div>`;
   }
 
   // ── Helpers ───────────────────────────────────────────────
   function _row(label, value) {
-    if (!value && value !== 0) return '';
+    if (value === null || value === undefined || value === '') return '';
     return `
       <div class="ts-row">
         <div class="ts-label">[ ${label} ]</div>
         <div class="ts-value">${value}</div>
       </div>`;
+  }
+
+  function _capFlag(label, active) {
+    return `<div class="cap-item ${active ? 'cap-on' : 'cap-off'}">${active ? '✓' : '✗'} ${label}</div>`;
+  }
+
+  function _scoreClass(score) {
+    if (score >= 8) return 'high';
+    if (score >= 5) return 'mid';
+    return 'low';
+  }
+
+  function _scoreKey(key) {
+    const map = {
+      architectureMaturity:  'ARCH',
+      aiSophistication:      'AI',
+      dataIntelligenceDepth: 'DATA',
+      scalabilityReadiness:  'SCALE',
+      productMarketClarity:  'PMF'
+    };
+    return map[key] || key.toUpperCase().slice(0,8);
   }
 
   function showLog(msg, type = 'info') {
@@ -445,7 +715,7 @@ const URLIntelligenceView = (() => {
 
   function deleteJob(event, jobId) {
     event.stopPropagation();
-    if (!confirm('Delete this analysis job and all associated data?')) return;
+    if (!confirm('Delete this analysis job and all associated intelligence data?')) return;
     URLIngestionEngine.deleteJob(jobId);
     if (activeJobId === jobId) {
       activeJobId = null;
@@ -455,9 +725,7 @@ const URLIntelligenceView = (() => {
     renderJobList();
   }
 
-  function init() {
-    renderJobList();
-  }
+  function init() { renderJobList(); }
 
   return { init, renderJobList, submitUrl, loadJob, showTab, deleteJob };
 })();
