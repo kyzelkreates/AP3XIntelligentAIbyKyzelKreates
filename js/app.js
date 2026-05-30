@@ -38,7 +38,9 @@
       case 'analysis':   renderAnalysis();   break;
       case 'graph':      renderGraph();      break;
       case 'url-intel':  renderURLIntel();   break;
-      case 'securescan': renderSecureScan(); break;
+      case 'securescan':     renderSecureScan();     break;
+      case 'proj-intel':    renderProjIntel();     break;
+      case 'proj-ai':       renderProjAI();        break;
       default:           renderDashboard();  break;
     }
   }
@@ -347,6 +349,18 @@
   function renderSecureScan() {
     if (typeof SecureScanView !== 'undefined') {
       SecureScanView.init();
+    }
+  }
+
+  function renderProjIntel() {
+    if (typeof ProjIntelView !== 'undefined') {
+      ProjIntelView.init();
+    }
+  }
+
+  function renderProjAI() {
+    if (typeof ProjAIView !== 'undefined') {
+      ProjAIView.init();
     }
   }
 
