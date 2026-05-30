@@ -33,6 +33,11 @@ const DEFAULT_DB = {
   clone_prompts:           [],  // Stage 4: AI clone build prompt
   clone_pwa_scaffolds:     [],  // Stage 5: deployable PWA files
 
+  // ── Project Intelligence Module ──────────────────────────────
+  project_intelligence_packs: [], // Full intelligence packs per project
+  project_ai_knowledge:       [], // Learned text documents (max 100)
+  project_ai_conversation:    [], // Chat history (max 200 messages)
+
   // ── SecureScan AI Module ────────────────────────────────────
   securescan_reports: [],   // Full scan reports (max 50)
   securescan_history: [],   // Lightweight history entries (max 200)
